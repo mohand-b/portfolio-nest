@@ -1,4 +1,3 @@
-// src/certification/certification.service.ts
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Certification } from './certification.entity';

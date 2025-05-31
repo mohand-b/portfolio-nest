@@ -15,6 +15,8 @@ import { Project } from './project/project.entity';
 import { TimelineItem } from './timeline/timeline-item.entity';
 import { CertificationController } from './certification/certification.controller';
 import { CertificationService } from './certification/certification.service';
+import { JobController } from './job/job.controller';
+import { JobService } from './job/job.service';
 
 @Module({
   imports: [
@@ -48,7 +50,12 @@ import { CertificationService } from './certification/certification.service';
       }),
     }),
   ],
-  controllers: [AdminController, CertificationController, VisitorController],
-  providers: [AdminService, CertificationService, VisitorService],
+  controllers: [
+    AdminController,
+    CertificationController,
+    JobController,
+    VisitorController,
+  ],
+  providers: [AdminService, CertificationService, JobService, VisitorService],
 })
 export class AppModule {}
