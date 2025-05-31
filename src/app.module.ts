@@ -17,6 +17,8 @@ import { CertificationController } from './certification/certification.controlle
 import { CertificationService } from './certification/certification.service';
 import { JobController } from './job/job.controller';
 import { JobService } from './job/job.service';
+import { ProjectController } from './project/project.controller';
+import { ProjectService } from './project/project.service';
 
 @Module({
   imports: [
@@ -54,8 +56,15 @@ import { JobService } from './job/job.service';
     AdminController,
     CertificationController,
     JobController,
+    ProjectController,
     VisitorController,
   ],
-  providers: [AdminService, CertificationService, JobService, VisitorService],
+  providers: [
+    AdminService,
+    CertificationService,
+    JobService,
+    ProjectService,
+    VisitorService,
+  ],
 })
 export class AppModule {}

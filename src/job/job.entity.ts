@@ -13,6 +13,8 @@ export class Job extends TimelineItem {
   @Column('text', { array: true })
   missions: string[];
 
-  @OneToMany(() => Project, (project) => project.job, { cascade: true })
+  @OneToMany(() => Project, (project) => project.job, {
+    cascade: true,
+  })
   projects: Project[];
 }
