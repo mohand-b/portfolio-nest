@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Project } from './project.entity';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { TimelineItemTypeEnum } from '../common/enums/timeline-item-type.enum';
 import { Job } from '../job/job.entity';
+import { Skill } from '../skill/skill.entity';
 
 @Injectable()
 export class ProjectService {
@@ -13,6 +14,8 @@ export class ProjectService {
     private readonly projectRepo: Repository<Project>,
     @InjectRepository(Job)
     private readonly jobRepo: Repository<Job>,
+    @InjectRepository(Skill)
+    private readonly skillRepo: Repository<Skill>,
   ) {}
 
   async create(dto: CreateProjectDto): Promise<Project> {
@@ -34,6 +37,12 @@ export class ProjectService {
 
     if (dto.jobId) {
       project.job = await this.jobRepo.findOneBy({ id: dto.jobId });
+    }
+
+    if (dto.skillIds?.length) {
+      project.skills = await this.skillRepo.find({
+        where: { id: In(dto.skillIds) },
+      });
     }
 
     return this.projectRepo.save(project);

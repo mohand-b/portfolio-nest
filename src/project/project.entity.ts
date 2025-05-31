@@ -1,6 +1,7 @@
-import { Column, Entity, ManyToOne } from 'typeorm';
+import { Column, Entity, JoinTable, ManyToMany, ManyToOne } from 'typeorm';
 import { TimelineItem } from '../timeline/timeline-item.entity';
 import { Job } from '../job/job.entity';
+import { Skill } from '../skill/skill.entity';
 
 @Entity()
 export class Project extends TimelineItem {
@@ -15,6 +16,10 @@ export class Project extends TimelineItem {
 
   @Column('text', { array: true })
   tools: string[];
+
+  @ManyToMany(() => Skill, { cascade: true })
+  @JoinTable()
+  skills: Skill[];
 
   @Column()
   projectType: string;

@@ -19,6 +19,9 @@ import { JobController } from './job/job.controller';
 import { JobService } from './job/job.service';
 import { ProjectController } from './project/project.controller';
 import { ProjectService } from './project/project.service';
+import { SkillService } from './skill/skill.service';
+import { SkillController } from './skill/skill.controller';
+import { Skill } from './skill/skill.entity';
 
 @Module({
   imports: [
@@ -38,6 +41,7 @@ import { ProjectService } from './project/project.service';
       Certification,
       Job,
       Project,
+      Skill,
       TimelineItem,
       Visitor,
     ]),
@@ -57,6 +61,7 @@ import { ProjectService } from './project/project.service';
     CertificationController,
     JobController,
     ProjectController,
+    SkillController,
     VisitorController,
   ],
   providers: [
@@ -64,6 +69,7 @@ import { ProjectService } from './project/project.service';
     CertificationService,
     JobService,
     ProjectService,
+    SkillService,
     VisitorService,
   ],
 })
