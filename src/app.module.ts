@@ -9,6 +9,12 @@ import { Admin } from './admin/admin.entity/admin.entity';
 import { AdminController } from './admin/admin.controller';
 import { AdminService } from './admin/admin.service';
 import { JwtModule } from '@nestjs/jwt';
+import { Certification } from './certification/certification.entity';
+import { Job } from './job/job.entity';
+import { Project } from './project/project.entity';
+import { TimelineItem } from './timeline/timeline-item.entity';
+import { CertificationController } from './certification/certification.controller';
+import { CertificationService } from './certification/certification.service';
 
 @Module({
   imports: [
@@ -23,7 +29,14 @@ import { JwtModule } from '@nestjs/jwt';
         synchronize: true,
       }),
     }),
-    TypeOrmModule.forFeature([Admin, Visitor]),
+    TypeOrmModule.forFeature([
+      Admin,
+      Certification,
+      Job,
+      Project,
+      TimelineItem,
+      Visitor,
+    ]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -35,7 +48,7 @@ import { JwtModule } from '@nestjs/jwt';
       }),
     }),
   ],
-  controllers: [AdminController, VisitorController],
-  providers: [AdminService, VisitorService],
+  controllers: [AdminController, CertificationController, VisitorController],
+  providers: [AdminService, CertificationService, VisitorService],
 })
 export class AppModule {}

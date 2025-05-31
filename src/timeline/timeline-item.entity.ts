@@ -15,8 +15,8 @@ export abstract class TimelineItem extends BaseEntity {
   @Column()
   title: string;
 
-  @Column()
-  startDate: Date;
+  @Column({ nullable: true })
+  startDate?: Date;
 
   @Column({ nullable: true })
   endDate?: Date;
