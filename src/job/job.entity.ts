@@ -1,9 +1,9 @@
 import { Column, Entity, OneToMany } from 'typeorm';
 import { TimelineItem } from '../timeline/timeline-item.entity';
-import { Project } from '../project/project.entity';
+import { ProjectEntity } from '../project/project.entity';
 
 @Entity()
-export class Job extends TimelineItem {
+export class JobEntity extends TimelineItem {
   @Column()
   company: string;
 
@@ -13,8 +13,8 @@ export class Job extends TimelineItem {
   @Column('text', { array: true })
   missions: string[];
 
-  @OneToMany(() => Project, (project) => project.job, {
+  @OneToMany(() => ProjectEntity, (project) => project.job, {
     cascade: true,
   })
-  projects: Project[];
+  projects: ProjectEntity[];
 }

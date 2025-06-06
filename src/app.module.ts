@@ -1,27 +1,18 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { VisitorController } from './visitor/visitor.controller';
-import { VisitorService } from './visitor/visitor.service';
-import { Visitor } from './visitor/visitor.entity';
-import { Admin } from './admin/admin.entity/admin.entity';
-import { AdminController } from './admin/admin.controller';
-import { AdminService } from './admin/admin.service';
-import { JwtModule } from '@nestjs/jwt';
-import { Certification } from './certification/certification.entity';
-import { Job } from './job/job.entity';
-import { Project } from './project/project.entity';
-import { TimelineItem } from './timeline/timeline-item.entity';
-import { CertificationController } from './certification/certification.controller';
-import { CertificationService } from './certification/certification.service';
-import { JobController } from './job/job.controller';
-import { JobService } from './job/job.service';
-import { ProjectController } from './project/project.controller';
-import { ProjectService } from './project/project.service';
-import { SkillService } from './skill/skill.service';
-import { SkillController } from './skill/skill.controller';
-import { Skill } from './skill/skill.entity';
+import { CoreModule } from './core/core.module';
+import { AdminModule } from './admin/admin.module';
+import { VisitorModule } from './visitor/visitor.module';
+import { CertificationModule } from './certification/certification.module';
+import { JobModule } from './job/job.module';
+import { ProjectModule } from './project/project.module';
+import { SkillModule } from './skill/skill.module';
+import { TimelineModule } from './timeline/timeline.module';
+import { AchievementModule } from './achievement/achievement.module';
+import { ContactModule } from './contact/contact.module';
+import { QuestionModule } from './question/question.module';
 
 @Module({
   imports: [
@@ -36,41 +27,17 @@ import { Skill } from './skill/skill.entity';
         synchronize: true,
       }),
     }),
-    TypeOrmModule.forFeature([
-      Admin,
-      Certification,
-      Job,
-      Project,
-      Skill,
-      TimelineItem,
-      Visitor,
-    ]),
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        secret: config.get<string>('JWT_SECRET'),
-        signOptions: {
-          expiresIn: config.get<string>('ADMIN_JWT_EXPIRES_IN') || '1d',
-        },
-      }),
-    }),
-  ],
-  controllers: [
-    AdminController,
-    CertificationController,
-    JobController,
-    ProjectController,
-    SkillController,
-    VisitorController,
-  ],
-  providers: [
-    AdminService,
-    CertificationService,
-    JobService,
-    ProjectService,
-    SkillService,
-    VisitorService,
+    CoreModule,
+    AdminModule,
+    VisitorModule,
+    CertificationModule,
+    JobModule,
+    ProjectModule,
+    SkillModule,
+    TimelineModule,
+    AchievementModule,
+    ContactModule,
+    QuestionModule,
   ],
 })
 export class AppModule {}

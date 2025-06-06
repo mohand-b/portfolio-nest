@@ -1,19 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Job } from './job.entity';
+import { JobEntity } from './job.entity';
 import { CreateJobDto } from './dto/create-job.dto';
 import { TimelineItemTypeEnum } from '../common/enums/timeline-item-type.enum';
 
 @Injectable()
 export class JobService {
   constructor(
-    @InjectRepository(Job)
-    private readonly jobRepo: Repository<Job>,
+    @InjectRepository(JobEntity)
+    private readonly jobRepository: Repository<JobEntity>,
   ) {}
 
-  async create(dto: CreateJobDto): Promise<Job> {
-    const job = this.jobRepo.create({
+  async create(dto: CreateJobDto): Promise<JobEntity> {
+    const job = this.jobRepository.create({
       title: dto.title,
       startDate: dto.startDate,
       endDate: dto.endDate ? new Date(dto.endDate) : undefined,
@@ -23,11 +23,11 @@ export class JobService {
       type: TimelineItemTypeEnum.JOB,
     });
 
-    return this.jobRepo.save(job);
+    return this.jobRepository.save(job);
   }
 
-  async findAll(): Promise<Job[]> {
-    return this.jobRepo.find({
+  async findAll(): Promise<JobEntity[]> {
+    return this.jobRepository.find({
       order: { endDate: 'DESC' },
     });
   }

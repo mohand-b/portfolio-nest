@@ -1,12 +1,15 @@
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
+  Entity,
+  JoinTable,
+  ManyToMany,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
+import { AchievementEntity } from '../achievement/achievement.entity';
 
 @Entity()
-export class Visitor {
+export class VisitorEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -30,4 +33,10 @@ export class Visitor {
 
   @CreateDateColumn()
   createdAt: Date;
+
+  @ManyToMany(() => AchievementEntity, (achievement) => achievement.visitors, {
+    cascade: true,
+  })
+  @JoinTable()
+  achievements: AchievementEntity[];
 }

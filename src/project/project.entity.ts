@@ -1,10 +1,10 @@
 import { Column, Entity, JoinTable, ManyToMany, ManyToOne } from 'typeorm';
 import { TimelineItem } from '../timeline/timeline-item.entity';
-import { Job } from '../job/job.entity';
-import { Skill } from '../skill/skill.entity';
+import { JobEntity } from '../job/job.entity';
+import { SkillEntity } from '../skill/skill.entity';
 
 @Entity()
-export class Project extends TimelineItem {
+export class ProjectEntity extends TimelineItem {
   @Column()
   context: string;
 
@@ -17,9 +17,9 @@ export class Project extends TimelineItem {
   @Column('text', { array: true })
   tools: string[];
 
-  @ManyToMany(() => Skill, { cascade: true })
+  @ManyToMany(() => SkillEntity, { cascade: true })
   @JoinTable()
-  skills: Skill[];
+  skills: SkillEntity[];
 
   @Column()
   projectType: string;
@@ -36,9 +36,9 @@ export class Project extends TimelineItem {
   @Column({ nullable: true, type: 'text' })
   impact: string;
 
-  @ManyToOne(() => Job, (job) => job.projects, {
+  @ManyToOne(() => JobEntity, (job) => job.projects, {
     nullable: true,
     onDelete: 'SET NULL',
   })
-  job?: Job;
+  job?: JobEntity;
 }

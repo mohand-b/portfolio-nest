@@ -1,25 +1,25 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Project } from './project.entity';
+import { ProjectEntity } from './project.entity';
 import { In, Repository } from 'typeorm';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { TimelineItemTypeEnum } from '../common/enums/timeline-item-type.enum';
-import { Job } from '../job/job.entity';
-import { Skill } from '../skill/skill.entity';
+import { JobEntity } from '../job/job.entity';
+import { SkillEntity } from '../skill/skill.entity';
 
 @Injectable()
 export class ProjectService {
   constructor(
-    @InjectRepository(Project)
-    private readonly projectRepo: Repository<Project>,
-    @InjectRepository(Job)
-    private readonly jobRepo: Repository<Job>,
-    @InjectRepository(Skill)
-    private readonly skillRepo: Repository<Skill>,
+    @InjectRepository(ProjectEntity)
+    private readonly projectRepository: Repository<ProjectEntity>,
+    @InjectRepository(JobEntity)
+    private readonly jobRepository: Repository<JobEntity>,
+    @InjectRepository(SkillEntity)
+    private readonly skillRepository: Repository<SkillEntity>,
   ) {}
 
-  async create(dto: CreateProjectDto): Promise<Project> {
-    const project = this.projectRepo.create({
+  async create(dto: CreateProjectDto): Promise<ProjectEntity> {
+    const project = this.projectRepository.create({
       title: dto.title,
       startDate: dto.startDate,
       endDate: dto.endDate ? new Date(dto.endDate) : undefined,
@@ -36,20 +36,20 @@ export class ProjectService {
     });
 
     if (dto.jobId) {
-      project.job = await this.jobRepo.findOneBy({ id: dto.jobId });
+      project.job = await this.jobRepository.findOneBy({ id: dto.jobId });
     }
 
     if (dto.skillIds?.length) {
-      project.skills = await this.skillRepo.find({
+      project.skills = await this.skillRepository.find({
         where: { id: In(dto.skillIds) },
       });
     }
 
-    return this.projectRepo.save(project);
+    return this.projectRepository.save(project);
   }
 
-  async findAll(): Promise<Project[]> {
-    return this.projectRepo.find({
+  async findAll(): Promise<ProjectEntity[]> {
+    return this.projectRepository.find({
       order: { endDate: 'DESC' },
     });
   }

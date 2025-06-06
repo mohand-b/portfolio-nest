@@ -9,19 +9,19 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { LoginAdminDto } from './dto/login-admin.dto/login-admin.dto';
-import { Admin } from './admin.entity/admin.entity';
+import { AdminEntity } from './admin.entity';
 import { UserType } from '../common/enums/role.enum';
 
 @Injectable()
 export class AdminService {
   constructor(
-    @InjectRepository(Admin)
-    private readonly adminRepository: Repository<Admin>,
+    @InjectRepository(AdminEntity)
+    private readonly adminRepository: Repository<AdminEntity>,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
   ) {}
 
-  async validateAdmin(email: string, password: string): Promise<Admin> {
+  async validateAdmin(email: string, password: string): Promise<AdminEntity> {
     const admin = await this.adminRepository.findOne({ where: { email } });
     if (!admin || !(await bcrypt.compare(password, admin.password))) {
       throw new UnauthorizedException('Email ou mot de passe incorrects.');

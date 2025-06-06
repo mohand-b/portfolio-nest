@@ -2,10 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
-import { UserType } from '../common/enums/role.enum';
+import { UserType } from '../../common/enums/role.enum';
 
 @Injectable()
-export class JwtAdminStrategy extends PassportStrategy(Strategy, 'admin-jwt') {
+export class JwtVisitorStrategy extends PassportStrategy(
+  Strategy,
+  'visitor-jwt',
+) {
   constructor(config: ConfigService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -18,7 +21,7 @@ export class JwtAdminStrategy extends PassportStrategy(Strategy, 'admin-jwt') {
     return {
       id: payload.sub,
       email: payload.email,
-      type: UserType.ADMIN,
+      type: UserType.VISITOR,
       ...payload,
     };
   }

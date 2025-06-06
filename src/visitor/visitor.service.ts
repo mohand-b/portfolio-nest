@@ -1,18 +1,26 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Visitor } from './visitor.entity';
+import { VisitorEntity } from './visitor.entity';
 import { randomUUID } from 'crypto';
 import { addDays } from 'date-fns';
 import { VisitorDto } from './dto/visitor.dto/visitor.dto';
 import { JwtService } from '@nestjs/jwt';
 import { UserType } from '../common/enums/role.enum';
+import { AchievementEntity } from '../achievement/achievement.entity';
 
 @Injectable()
 export class VisitorService {
   constructor(
-    @InjectRepository(Visitor)
-    private readonly visitorRepository: Repository<Visitor>,
+    @InjectRepository(VisitorEntity)
+    private readonly visitorRepository: Repository<VisitorEntity>,
+    @InjectRepository(AchievementEntity)
+    private readonly achievementRepository: Repository<AchievementEntity>,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -54,11 +62,48 @@ export class VisitorService {
     return true;
   }
 
-  private async findByEmail(email: string): Promise<Visitor | null> {
+  async addAchievementToVisitor(
+    visitorId: string,
+    achievementCode: string,
+  ): Promise<VisitorEntity> {
+    const visitor = await this.visitorRepository.findOne({
+      where: { id: visitorId },
+      relations: ['achievements'],
+    });
+
+    if (!visitor) throw new NotFoundException('Visiteur introuvable');
+
+    const achievement = await this.achievementRepository.findOne({
+      where: { code: achievementCode },
+    });
+
+    if (!achievement) throw new NotFoundException('Succès introuvable');
+
+    if (visitor.achievements.some((a) => a.id === achievement.id)) {
+      throw new BadRequestException('Succès déjà débloqué.');
+    }
+
+    visitor.achievements.push(achievement);
+    await this.visitorRepository.save(visitor);
+    return visitor;
+  }
+
+  async getAchievementsForVisitor(
+    visitorId: string,
+  ): Promise<AchievementEntity[]> {
+    const visitor = await this.visitorRepository.findOne({
+      where: { id: visitorId },
+      relations: ['achievements'],
+    });
+    if (!visitor) throw new NotFoundException('Visiteur introuvable');
+    return visitor.achievements;
+  }
+
+  private async findByEmail(email: string): Promise<VisitorEntity | null> {
     return this.visitorRepository.findOne({ where: { email } });
   }
 
-  private checkNameMatch(visitor: Visitor, dto: VisitorDto): boolean {
+  private checkNameMatch(visitor: VisitorEntity, dto: VisitorDto): boolean {
     return (
       visitor.firstName.trim().toLowerCase() ===
         dto.firstName.trim().toLowerCase() &&
@@ -67,7 +112,7 @@ export class VisitorService {
     );
   }
 
-  private async registerVisitor(dto: VisitorDto): Promise<Visitor> {
+  private async registerVisitor(dto: VisitorDto): Promise<VisitorEntity> {
     const visitor = this.visitorRepository.create({
       ...dto,
       isVerified: false,
@@ -77,7 +122,7 @@ export class VisitorService {
     return this.visitorRepository.save(visitor);
   }
 
-  private async issueVerification(visitor: Visitor): Promise<void> {
+  private async issueVerification(visitor: VisitorEntity): Promise<void> {
     visitor.verificationToken = randomUUID();
     visitor.verificationExpiresAt = addDays(new Date(), 7);
     await this.visitorRepository.save(visitor);
@@ -87,7 +132,7 @@ export class VisitorService {
     );
   }
 
-  private async issueJwt(visitor: Visitor): Promise<string> {
+  private async issueJwt(visitor: VisitorEntity): Promise<string> {
     return this.jwtService.signAsync({
       sub: visitor.id,
       email: visitor.email,
@@ -96,7 +141,7 @@ export class VisitorService {
     });
   }
 
-  private async buildAuthResponse(visitor: Visitor) {
+  private async buildAuthResponse(visitor: VisitorEntity) {
     const token = await this.issueJwt(visitor);
 
     let message: string;

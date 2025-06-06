@@ -1,8 +1,8 @@
 import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { Project } from '../project/project.entity';
+import { ProjectEntity } from '../project/project.entity';
 
 @Entity()
-export class Skill {
+export class SkillEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -15,6 +15,6 @@ export class Skill {
   @Column()
   category: string;
 
-  @ManyToMany(() => Project, (project) => project.skills)
-  projects: Project[];
+  @ManyToMany(() => ProjectEntity, (project) => project.skills)
+  projects: ProjectEntity[];
 }

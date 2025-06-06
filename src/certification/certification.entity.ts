@@ -2,7 +2,7 @@ import { Column, Entity } from 'typeorm';
 import { TimelineItem } from '../timeline/timeline-item.entity';
 
 @Entity()
-export class Certification extends TimelineItem {
+export class CertificationEntity extends TimelineItem {
   @Column()
   school: string;
 
