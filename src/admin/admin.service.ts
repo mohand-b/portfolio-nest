@@ -29,7 +29,7 @@ export class AdminService {
     return admin;
   }
 
-  async login(dto: LoginAdminDto): Promise<{ access_token: string }> {
+  async login(dto: LoginAdminDto): Promise<{ accessToken: string }> {
     const admin = await this.validateAdmin(dto.email, dto.password);
 
     const payload = {
@@ -40,11 +40,11 @@ export class AdminService {
 
     const expiresIn = this.config.get<string>('JWT_EXPIRES_IN') || '1d';
 
-    const access_token = await this.jwtService.signAsync(payload, {
+    const accessToken = await this.jwtService.signAsync(payload, {
       expiresIn,
     });
 
-    return { access_token };
+    return { accessToken };
   }
 
   async createAdmin(dto: any) {

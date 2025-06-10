@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -13,6 +12,8 @@ import { VisitorDto } from './dto/visitor.dto/visitor.dto';
 import { JwtService } from '@nestjs/jwt';
 import { UserType } from '../common/enums/role.enum';
 import { AchievementEntity } from '../achievement/achievement.entity';
+import { AchievementWithStatusDto } from '../achievement/dto/achievement-with-status.dto';
+import { AchievementUnlockResponseDto } from '../achievement/dto/achievement-unlock-response.dto';
 
 @Injectable()
 export class VisitorService {
@@ -62,41 +63,48 @@ export class VisitorService {
     return true;
   }
 
-  async addAchievementToVisitor(
-    visitorId: string,
-    achievementCode: string,
-  ): Promise<VisitorEntity> {
-    const visitor = await this.visitorRepository.findOne({
-      where: { id: visitorId },
-      relations: ['achievements'],
-    });
-
-    if (!visitor) throw new NotFoundException('Visiteur introuvable');
-
-    const achievement = await this.achievementRepository.findOne({
-      where: { code: achievementCode },
-    });
-
-    if (!achievement) throw new NotFoundException('Succès introuvable');
-
-    if (visitor.achievements.some((a) => a.id === achievement.id)) {
-      throw new BadRequestException('Succès déjà débloqué.');
-    }
-
-    visitor.achievements.push(achievement);
-    await this.visitorRepository.save(visitor);
-    return visitor;
-  }
-
   async getAchievementsForVisitor(
     visitorId: string,
-  ): Promise<AchievementEntity[]> {
+  ): Promise<AchievementWithStatusDto[]> {
+    const allAchievements = await this.achievementRepository.find();
     const visitor = await this.visitorRepository.findOne({
       where: { id: visitorId },
       relations: ['achievements'],
     });
-    if (!visitor) throw new NotFoundException('Visiteur introuvable');
-    return visitor.achievements;
+
+    const unlocked = visitor.achievements.map((a) => a.id);
+    return allAchievements.map((a) => ({
+      ...a,
+      unlocked: unlocked.includes(a.id),
+    }));
+  }
+
+  async unlockAchievement(
+    visitorId: string,
+    code: string,
+  ): Promise<AchievementUnlockResponseDto> {
+    const visitor = await this.visitorRepository.findOne({
+      where: { id: visitorId },
+      relations: ['achievements'],
+    });
+
+    const achievement = await this.achievementRepository.findOne({
+      where: { code },
+    });
+
+    if (!achievement) {
+      throw new NotFoundException('Succès non trouvé.');
+    }
+
+    const alreadyUnlocked = visitor.achievements.find(
+      (a) => a.id === achievement.id,
+    );
+    if (!alreadyUnlocked) {
+      visitor.achievements.push(achievement);
+      await this.visitorRepository.save(visitor);
+    }
+
+    return { success: true, achievement };
   }
 
   private async findByEmail(email: string): Promise<VisitorEntity | null> {
@@ -148,11 +156,15 @@ export class VisitorService {
     if (!visitor.isVerified && visitor.verificationExpiresAt) {
       const msLeft = visitor.verificationExpiresAt.getTime() - Date.now();
       const daysLeft = Math.max(1, Math.ceil(msLeft / (1000 * 60 * 60 * 24)));
-      message = `Merci de vérifier votre email. Votre compte sera supprimé dans ${daysLeft} jour${daysLeft > 1 ? 's' : ''} si vous ne le validez pas.`;
+      message = `Merci de vérifier votre email. Ton compte sera supprimé dans ${daysLeft} jour${daysLeft > 1 ? 's' : ''} si tu ne le valides pas.`;
     }
 
     return {
-      access_token: token,
+      id: visitor.id,
+      email: visitor.email,
+      firstName: visitor.firstName,
+      lastName: visitor.lastName,
+      accessToken: token,
       isVerified: visitor.isVerified,
       ...(message ? { message } : {}),
     };
