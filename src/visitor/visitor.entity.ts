@@ -4,9 +4,11 @@ import {
   Entity,
   JoinTable,
   ManyToMany,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { AchievementEntity } from '../achievement/achievement.entity';
+import { AchievementUnlockLogEntity } from '../achievement-unlock-log/achievement-unlock-log.entity';
 
 @Entity()
 export class VisitorEntity {
@@ -39,4 +41,7 @@ export class VisitorEntity {
   })
   @JoinTable()
   achievements: AchievementEntity[];
+
+  @OneToMany(() => AchievementUnlockLogEntity, (log) => log.visitor)
+  achievementUnlockLogs: AchievementUnlockLogEntity[];
 }

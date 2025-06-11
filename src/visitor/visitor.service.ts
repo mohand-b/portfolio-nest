@@ -14,6 +14,7 @@ import { UserType } from '../common/enums/role.enum';
 import { AchievementEntity } from '../achievement/achievement.entity';
 import { AchievementWithStatusDto } from '../achievement/dto/achievement-with-status.dto';
 import { AchievementUnlockResponseDto } from '../achievement/dto/achievement-unlock-response.dto';
+import { AchievementUnlockLogEntity } from '../achievement-unlock-log/achievement-unlock-log.entity';
 
 @Injectable()
 export class VisitorService {
@@ -22,6 +23,8 @@ export class VisitorService {
     private readonly visitorRepository: Repository<VisitorEntity>,
     @InjectRepository(AchievementEntity)
     private readonly achievementRepository: Repository<AchievementEntity>,
+    @InjectRepository(AchievementUnlockLogEntity)
+    private readonly achievementUnlockLogRepository: Repository<AchievementUnlockLogEntity>,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -102,9 +105,16 @@ export class VisitorService {
     if (!alreadyUnlocked) {
       visitor.achievements.push(achievement);
       await this.visitorRepository.save(visitor);
+      await this.achievementUnlockLogRepository.save({
+        visitor,
+        achievement,
+      });
     }
 
-    return { success: true, achievement };
+    return {
+      success: true,
+      achievement,
+    };
   }
 
   private async findByEmail(email: string): Promise<VisitorEntity | null> {

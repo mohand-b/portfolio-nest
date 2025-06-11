@@ -3,9 +3,11 @@ import {
   CreateDateColumn,
   Entity,
   ManyToMany,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { VisitorEntity } from '../visitor/visitor.entity';
+import { AchievementUnlockLogEntity } from '../achievement-unlock-log/achievement-unlock-log.entity';
 
 @Entity()
 export class AchievementEntity {
@@ -26,4 +28,7 @@ export class AchievementEntity {
 
   @ManyToMany(() => VisitorEntity, (visitor) => visitor.achievements)
   visitors: VisitorEntity[];
+
+  @OneToMany(() => AchievementUnlockLogEntity, (log) => log.achievement)
+  achievementUnlockLogs: AchievementUnlockLogEntity[];
 }

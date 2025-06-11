@@ -13,6 +13,7 @@ import { TimelineModule } from './timeline/timeline.module';
 import { AchievementModule } from './achievement/achievement.module';
 import { ContactModule } from './contact/contact.module';
 import { QuestionModule } from './question/question.module';
+import { AchievementUnlockLogModule } from './achievement-unlock-log/achievement-unlock-log.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { QuestionModule } from './question/question.module';
     AchievementModule,
     ContactModule,
     QuestionModule,
+    AchievementUnlockLogModule,
   ],
 })
 export class AppModule {}
