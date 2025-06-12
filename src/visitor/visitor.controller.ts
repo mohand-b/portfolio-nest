@@ -7,21 +7,38 @@ import {
   Post,
   Query,
   Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { VisitorService } from './visitor.service';
-import { VisitorDto } from './dto/visitor.dto/visitor.dto';
+import { VisitorDto } from './dto/visitor.dto';
 import { JwtVisitorGuard } from '../core/guards/jwt-visitor.guard';
 import { AchievementWithStatusDto } from '../achievement/dto/achievement-with-status.dto';
 import { AchievementUnlockResponseDto } from '../achievement/dto/achievement-unlock-response.dto';
+import { Response } from 'express';
+import { VisitorAuthResponse } from './dto/visitor-auth-response.dto';
 
 @Controller('visitor')
 export class VisitorController {
   constructor(private readonly visitorService: VisitorService) {}
 
   @Post()
-  async authenticate(@Body() dto: VisitorDto) {
-    return this.visitorService.authenticate(dto);
+  async authenticate(
+    @Body() dto: VisitorDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<VisitorAuthResponse> {
+    const fullResponse = await this.visitorService.authenticate(dto);
+    const { accessToken, ...visitorProfile } = fullResponse;
+
+    res.cookie('visitorAccessToken', accessToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+
+    return visitorProfile;
   }
 
   @Get('verify')

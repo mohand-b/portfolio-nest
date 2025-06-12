@@ -8,7 +8,7 @@ import { Repository } from 'typeorm';
 import { VisitorEntity } from './visitor.entity';
 import { randomUUID } from 'crypto';
 import { addDays } from 'date-fns';
-import { VisitorDto } from './dto/visitor.dto/visitor.dto';
+import { VisitorDto } from './dto/visitor.dto';
 import { JwtService } from '@nestjs/jwt';
 import { UserType } from '../common/enums/role.enum';
 import { AchievementEntity } from '../achievement/achievement.entity';
