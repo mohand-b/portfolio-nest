@@ -21,22 +21,57 @@ export class AdminController {
     @Body() dto: LoginAdminDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<{ message: string }> {
-    const { accessToken } = await this.adminService.login(dto);
+    const { accessToken, refreshToken } = await this.adminService.login(dto);
 
     res.cookie('adminAccessToken', accessToken, {
       httpOnly: true,
-      secure: false,
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: 24 * 60 * 60 * 1000,
+      maxAge: 15 * 60 * 1000,
+    });
+
+    res.cookie('adminRefreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     return { message: 'Connexion réussie' };
   }
 
+  @Post('refresh-token')
+  async refreshToken(
+    @Req() req: any,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const refreshToken = req.cookies['adminRefreshToken'];
+    const { accessToken } =
+      await this.adminService.refreshAdminToken(refreshToken);
+
+    res.cookie('adminAccessToken', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 15 * 60 * 1000,
+    });
+
+    return { message: 'Token rafraîchi' };
+  }
+
+  @Post('logout')
+  logout(@Res({ passthrough: true }) res: Response) {
+    res.clearCookie('adminAccessToken');
+    res.clearCookie('adminRefreshToken');
+    return { message: 'Admin déconnecté' };
+  }
+
   @UseGuards(JwtAdminGuard)
   @Get('me')
-  getMe(@Req() req: any) {
+  async getAdminProfile(@Req() req: any) {
     return req.user;
   }
 

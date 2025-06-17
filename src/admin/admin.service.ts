@@ -29,7 +29,9 @@ export class AdminService {
     return admin;
   }
 
-  async login(dto: LoginAdminDto): Promise<{ accessToken: string }> {
+  async login(
+    dto: LoginAdminDto,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
     const admin = await this.validateAdmin(dto.email, dto.password);
 
     const payload = {
@@ -38,13 +40,43 @@ export class AdminService {
       role: UserType.ADMIN,
     };
 
-    const expiresIn = this.config.get<string>('JWT_EXPIRES_IN') || '1d';
-
     const accessToken = await this.jwtService.signAsync(payload, {
-      expiresIn,
+      expiresIn: '15m',
+      secret: this.config.get<string>('JWT_SECRET'),
     });
 
-    return { accessToken };
+    const refreshToken = await this.jwtService.signAsync(payload, {
+      expiresIn: '7d',
+      secret: this.config.get<string>('JWT_REFRESH_SECRET'),
+    });
+
+    return { accessToken, refreshToken };
+  }
+
+  async refreshAdminToken(
+    refreshToken: string,
+  ): Promise<{ accessToken: string }> {
+    try {
+      const payload = await this.jwtService.verifyAsync(refreshToken, {
+        secret: this.config.get<string>('JWT_REFRESH_SECRET'),
+      });
+
+      const accessToken = await this.jwtService.signAsync(
+        {
+          sub: payload.sub,
+          email: payload.email,
+          role: payload.role,
+        },
+        {
+          expiresIn: '15m',
+          secret: this.config.get<string>('JWT_SECRET'),
+        },
+      );
+
+      return { accessToken };
+    } catch (err) {
+      throw new UnauthorizedException('Refresh token invalide ou expiré');
+    }
   }
 
   async createAdmin(dto: any) {
