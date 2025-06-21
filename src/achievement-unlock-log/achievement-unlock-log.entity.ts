@@ -15,7 +15,13 @@ export class AchievementUnlockLogEntity {
   @ManyToOne(() => VisitorEntity, { eager: true })
   visitor: VisitorEntity;
 
-  @ManyToOne(() => AchievementEntity, { eager: true })
+  @ManyToOne(
+    () => AchievementEntity,
+    (achievement) => achievement.achievementUnlockLogs,
+    {
+      onDelete: 'CASCADE',
+    },
+  )
   achievement: AchievementEntity;
 
   @CreateDateColumn()

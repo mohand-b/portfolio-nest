@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { AchievementService } from './achievement.service';
 import { JwtAdminGuard } from '../core/guards/jwt-admin.guard';
 import { CreateAchievementDto } from './dto/create-achievement.dto';
@@ -18,5 +26,11 @@ export class AchievementController {
   @Get()
   findAll(): Promise<AchievementEntity[]> {
     return this.achievementService.findAll();
+  }
+
+  @UseGuards(JwtAdminGuard)
+  @Delete('code/:code')
+  async removeByCode(@Param('code') code: string) {
+    return this.achievementService.deleteByCode(code);
   }
 }

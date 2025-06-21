@@ -26,7 +26,9 @@ export class AchievementEntity {
   @CreateDateColumn()
   createdAt: Date;
 
-  @ManyToMany(() => VisitorEntity, (visitor) => visitor.achievements)
+  @ManyToMany(() => VisitorEntity, (visitor) => visitor.achievements, {
+    onDelete: 'CASCADE',
+  })
   visitors: VisitorEntity[];
 
   @OneToMany(() => AchievementUnlockLogEntity, (log) => log.achievement)
