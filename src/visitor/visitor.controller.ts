@@ -17,6 +17,7 @@ import { AchievementWithStatusDto } from '../achievement/dto/achievement-with-st
 import { AchievementUnlockResponseDto } from '../achievement/dto/achievement-unlock-response.dto';
 import { Response } from 'express';
 import { VisitorAuthResponse } from './dto/visitor-auth-response.dto';
+import { JwtAdminGuard } from '../core/guards/jwt-admin.guard';
 
 @Controller('visitor')
 export class VisitorController {
@@ -63,5 +64,11 @@ export class VisitorController {
     @Req() req: any,
   ): Promise<AchievementWithStatusDto[]> {
     return this.visitorService.getAchievementsForVisitor(req.user.id);
+  }
+
+  @UseGuards(JwtAdminGuard)
+  @Get('all')
+  getAllVisitors(): Promise<VisitorDto[]> {
+    return this.visitorService.findAll();
   }
 }

@@ -117,6 +117,10 @@ export class VisitorService {
     };
   }
 
+  findAll(): Promise<VisitorEntity[]> {
+    return this.visitorRepository.find();
+  }
+
   private async findByEmail(email: string): Promise<VisitorEntity | null> {
     return this.visitorRepository.findOne({ where: { email } });
   }
