@@ -27,19 +27,54 @@ export class VisitorController {
   async authenticate(
     @Body() dto: VisitorDto,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<VisitorAuthResponse> {
-    const fullResponse = await this.visitorService.authenticate(dto);
-    const { accessToken, ...visitorProfile } = fullResponse;
+  ): Promise<Omit<VisitorAuthResponse, 'accessToken' | 'refreshToken'>> {
+    const { accessToken, refreshToken, ...visitorProfile } =
+      await this.visitorService.authenticate(dto);
 
     res.cookie('visitorAccessToken', accessToken, {
       httpOnly: true,
-      secure: false,
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: 24 * 60 * 60 * 1000,
+      maxAge: 15 * 60 * 1000,
+    });
+
+    res.cookie('visitorRefreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     return visitorProfile;
+  }
+
+  @Post('refresh-token')
+  async refreshToken(
+    @Req() req: any,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<{ message: string }> {
+    const token = req.cookies['visitorRefreshToken'];
+    const { accessToken } =
+      await this.visitorService.refreshVisitorToken(token);
+
+    res.cookie('visitorAccessToken', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 15 * 60 * 1000,
+    });
+
+    return { message: 'Token rafraîchi' };
+  }
+
+  @Post('logout')
+  logout(@Res({ passthrough: true }) res: Response): { message: string } {
+    res.clearCookie('visitorAccessToken');
+    res.clearCookie('visitorRefreshToken');
+    return { message: 'Déconnexion réussie' };
   }
 
   @Get('verify')

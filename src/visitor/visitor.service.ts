@@ -15,6 +15,7 @@ import { AchievementEntity } from '../achievement/achievement.entity';
 import { AchievementWithStatusDto } from '../achievement/dto/achievement-with-status.dto';
 import { AchievementUnlockResponseDto } from '../achievement/dto/achievement-unlock-response.dto';
 import { AchievementUnlockLogEntity } from '../achievement-unlock-log/achievement-unlock-log.entity';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class VisitorService {
@@ -26,6 +27,7 @@ export class VisitorService {
     @InjectRepository(AchievementUnlockLogEntity)
     private readonly achievementUnlockLogRepository: Repository<AchievementUnlockLogEntity>,
     private readonly jwtService: JwtService,
+    private readonly config: ConfigService,
   ) {}
 
   async authenticate(dto: VisitorDto): Promise<any> {
@@ -47,6 +49,8 @@ export class VisitorService {
       await this.issueVerification(visitor);
     }
 
+    visitor.lastVisitAt = new Date();
+
     return this.buildAuthResponse(visitor);
   }
 
@@ -64,6 +68,34 @@ export class VisitorService {
 
     await this.visitorRepository.save(visitor);
     return true;
+  }
+
+  async refreshVisitorToken(
+    refreshToken: string,
+  ): Promise<{ accessToken: string }> {
+    try {
+      const payload = await this.jwtService.verifyAsync(refreshToken, {
+        secret: this.config.get<string>('JWT_REFRESH_SECRET'),
+      });
+
+      if (payload.type !== UserType.VISITOR) throw new UnauthorizedException();
+
+      const accessToken = await this.jwtService.signAsync(
+        {
+          sub: payload.sub,
+          email: payload.email,
+          type: UserType.VISITOR,
+        },
+        {
+          expiresIn: '15m',
+          secret: this.config.get<string>('JWT_SECRET'),
+        },
+      );
+
+      return { accessToken };
+    } catch (err) {
+      throw new UnauthorizedException('Refresh token invalide ou expiré');
+    }
   }
 
   async getAchievementsForVisitor(
@@ -140,6 +172,7 @@ export class VisitorService {
       isVerified: false,
       verificationToken: randomUUID(),
       verificationExpiresAt: addDays(new Date(), 7),
+      lastVisitAt: new Date(),
     });
     return this.visitorRepository.save(visitor);
   }
@@ -155,16 +188,37 @@ export class VisitorService {
   }
 
   private async issueJwt(visitor: VisitorEntity): Promise<string> {
-    return this.jwtService.signAsync({
-      sub: visitor.id,
-      email: visitor.email,
-      isVerified: visitor.isVerified,
-      type: UserType.VISITOR,
-    });
+    return this.jwtService.signAsync(
+      {
+        sub: visitor.id,
+        email: visitor.email,
+        isVerified: visitor.isVerified,
+        type: UserType.VISITOR,
+      },
+      {
+        expiresIn: '15m',
+        secret: this.config.get<string>('JWT_SECRET'),
+      },
+    );
+  }
+
+  private async issueRefreshJwt(visitor: VisitorEntity): Promise<string> {
+    return this.jwtService.signAsync(
+      {
+        sub: visitor.id,
+        email: visitor.email,
+        type: UserType.VISITOR,
+      },
+      {
+        expiresIn: '7d',
+        secret: this.config.get<string>('JWT_REFRESH_SECRET'),
+      },
+    );
   }
 
   private async buildAuthResponse(visitor: VisitorEntity) {
-    const token = await this.issueJwt(visitor);
+    const accessToken = await this.issueJwt(visitor);
+    const refreshToken = await this.issueRefreshJwt(visitor);
 
     let message: string;
     if (!visitor.isVerified && visitor.verificationExpiresAt) {
@@ -178,8 +232,10 @@ export class VisitorService {
       email: visitor.email,
       firstName: visitor.firstName,
       lastName: visitor.lastName,
-      accessToken: token,
+      accessToken,
+      refreshToken,
       isVerified: visitor.isVerified,
+      lastVisitAt: visitor.lastVisitAt,
       ...(message ? { message } : {}),
     };
   }

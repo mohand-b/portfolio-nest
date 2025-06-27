@@ -36,6 +36,9 @@ export class VisitorEntity {
   @CreateDateColumn()
   createdAt: Date;
 
+  @Column()
+  lastVisitAt: Date;
+
   @ManyToMany(() => AchievementEntity, (achievement) => achievement.visitors, {
     cascade: true,
   })
