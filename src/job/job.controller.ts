@@ -4,11 +4,11 @@ import { CreateJobDto } from './dto/create-job.dto';
 import { JobEntity } from './job.entity';
 import { JwtAdminGuard } from '../core/guards/jwt-admin.guard';
 
-@Controller('job')
+@Controller('jobs')
 export class JobController {
   constructor(private readonly jobService: JobService) {}
 
-  @Post()
+  @Post('create')
   @UseGuards(JwtAdminGuard)
   async create(@Body() dto: CreateJobDto): Promise<JobEntity> {
     return this.jobService.create(dto);
