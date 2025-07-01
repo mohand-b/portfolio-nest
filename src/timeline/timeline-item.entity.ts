@@ -26,4 +26,7 @@ export abstract class TimelineItem extends BaseEntity {
 
   @CreateDateColumn()
   createdAt: Date;
+
+  @Column({ type: 'bytea', nullable: true })
+  image?: Buffer;
 }

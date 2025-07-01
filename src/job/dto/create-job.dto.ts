@@ -20,4 +20,7 @@ export class CreateJobDto {
   @IsArray()
   @IsString({ each: true })
   missions: string[];
+
+  @IsOptional()
+  image?: Buffer;
 }
