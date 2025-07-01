@@ -4,6 +4,8 @@ import { Repository } from 'typeorm';
 import { JobEntity } from './job.entity';
 import { CreateJobDto } from './dto/create-job.dto';
 import { TimelineItemTypeEnum } from '../common/enums/timeline-item-type.enum';
+import { toValidDate } from '../utils/date.utils';
+import { parseArrayField } from '../utils/array.utils';
 
 @Injectable()
 export class JobService {
@@ -15,12 +17,13 @@ export class JobService {
   async create(dto: CreateJobDto): Promise<JobEntity> {
     const job = this.jobRepository.create({
       title: dto.title,
-      startDate: dto.startDate,
-      endDate: dto.endDate ? new Date(dto.endDate) : undefined,
+      startDate: toValidDate(dto.startDate),
+      endDate: toValidDate(dto.endDate),
       company: dto.company,
       location: dto.location,
-      missions: dto.missions,
+      missions: parseArrayField(dto.missions),
       type: TimelineItemTypeEnum.JOB,
+      image: dto.image,
     });
 
     return this.jobRepository.save(job);
