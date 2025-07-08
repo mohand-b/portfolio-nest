@@ -17,4 +17,7 @@ export class CreateCertificationDto {
 
   @IsString()
   location: string;
+
+  @IsOptional()
+  image?: Buffer;
 }

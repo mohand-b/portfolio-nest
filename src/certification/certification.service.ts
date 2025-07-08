@@ -4,6 +4,7 @@ import { CertificationEntity } from './certification.entity';
 import { Repository } from 'typeorm';
 import { CreateCertificationDto } from './dto/create-certification.dto';
 import { TimelineItemTypeEnum } from '../common/enums/timeline-item-type.enum';
+import { toValidDate } from '../utils/date.utils';
 
 @Injectable()
 export class CertificationService {
@@ -15,8 +16,8 @@ export class CertificationService {
   async create(dto: CreateCertificationDto): Promise<CertificationEntity> {
     const certification = this.certificationRepository.create({
       title: dto.certificationName,
-      startDate: dto.startDate ? new Date(dto.startDate) : undefined,
-      endDate: dto.endDate ? new Date(dto.endDate) : undefined,
+      startDate: toValidDate(dto.startDate),
+      endDate: toValidDate(dto.endDate),
       school: dto.school,
       type: TimelineItemTypeEnum.CERTIFICATION,
       location: dto.location,
