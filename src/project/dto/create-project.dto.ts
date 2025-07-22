@@ -56,4 +56,11 @@ export class CreateProjectDto {
   @IsUUID()
   @IsOptional()
   jobId?: string;
+
+  @IsOptional()
+  images?: Buffer[];
+
+  @IsString()
+  @IsOptional()
+  githubLink?: string;
 }

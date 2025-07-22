@@ -41,4 +41,10 @@ export class ProjectEntity extends TimelineItem {
     onDelete: 'SET NULL',
   })
   job?: JobEntity;
+
+  @Column({ nullable: true })
+  githubLink: string;
+
+  @Column('bytea', { array: true, nullable: true })
+  images?: Buffer[];
 }
