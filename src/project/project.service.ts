@@ -8,6 +8,7 @@ import { TimelineItemTypeEnum } from '../common/enums/timeline-item-type.enum';
 import { JobEntity } from '../job/job.entity';
 import { SkillEntity } from '../skill/skill.entity';
 import { parseArrayField } from '../utils/array.utils';
+import { buffersToBase64 } from '../utils/image.utils';
 
 @Injectable()
 export class ProjectService {
@@ -63,7 +64,6 @@ export class ProjectService {
       throw new NotFoundException(`Project with ID ${id} not found`);
     }
 
-    // Update dates (for adding project to timeline)
     if (dto.startDate !== undefined) {
       project.startDate = dto.startDate ? new Date(dto.startDate) : null;
     }
@@ -74,9 +74,15 @@ export class ProjectService {
     return this.projectRepository.save(project);
   }
 
-  async findAll(): Promise<ProjectEntity[]> {
-    return this.projectRepository.find({
+  async findAll(): Promise<any[]> {
+    const projects = await this.projectRepository.find({
+      relations: ['skills', 'job'],
       order: { endDate: 'DESC' },
     });
+
+    return projects.map((project) => ({
+      ...project,
+      images: buffersToBase64(project.images),
+    }));
   }
 }

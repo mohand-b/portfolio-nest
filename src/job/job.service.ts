@@ -29,9 +29,15 @@ export class JobService {
     return this.jobRepository.save(job);
   }
 
-  async findAll(): Promise<JobEntity[]> {
-    return this.jobRepository.find({
+  async findAll(): Promise<any[]> {
+    const jobs = await this.jobRepository.find({
+      relations: ['projects'],
       order: { endDate: 'DESC' },
     });
+
+    return jobs.map((job) => ({
+      ...job,
+      image: bufferToBase64(job.image),
+    }));
   }
 }
