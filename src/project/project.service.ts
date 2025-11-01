@@ -1,11 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ProjectEntity } from './project.entity';
 import { In, Repository } from 'typeorm';
 import { CreateProjectDto } from './dto/create-project.dto';
+import { UpdateProjectDto } from './dto/update-project.dto';
 import { TimelineItemTypeEnum } from '../common/enums/timeline-item-type.enum';
 import { JobEntity } from '../job/job.entity';
 import { SkillEntity } from '../skill/skill.entity';
+import { parseArrayField } from '../utils/array.utils';
 
 @Injectable()
 export class ProjectService {
@@ -18,31 +20,55 @@ export class ProjectService {
     private readonly skillRepository: Repository<SkillEntity>,
   ) {}
 
-  async create(dto: CreateProjectDto): Promise<ProjectEntity> {
+  async create(
+    dto: CreateProjectDto,
+    files: Express.Multer.File[] = [],
+  ): Promise<ProjectEntity> {
+    const images: Buffer[] = files
+      .filter((f) => f.mimetype?.startsWith('image/'))
+      .map((f) => f.buffer);
+
     const project = this.projectRepository.create({
       title: dto.title,
-      startDate: dto.startDate,
-      endDate: dto.endDate ? new Date(dto.endDate) : undefined,
       context: dto.context,
       collaboration: dto.collaboration,
-      missions: dto.missions,
-      tools: dto.tools,
-      projectType: dto.projectType,
+      missions: parseArrayField(dto.missions),
+      tools: parseArrayField(dto.tools),
+      projectTypes: parseArrayField(dto.projectTypes),
       scope: dto.scope,
       market: dto.market,
       challenges: dto.challenges,
       impact: dto.impact,
+      images,
+      githubLink: dto.githubLink,
       type: TimelineItemTypeEnum.PROJECT,
     });
 
     if (dto.jobId) {
       project.job = await this.jobRepository.findOneBy({ id: dto.jobId });
     }
-
     if (dto.skillIds?.length) {
       project.skills = await this.skillRepository.find({
         where: { id: In(dto.skillIds) },
       });
+    }
+
+    return this.projectRepository.save(project);
+  }
+
+  async update(id: string, dto: UpdateProjectDto): Promise<ProjectEntity> {
+    const project = await this.projectRepository.findOneBy({ id });
+
+    if (!project) {
+      throw new NotFoundException(`Project with ID ${id} not found`);
+    }
+
+    // Update dates (for adding project to timeline)
+    if (dto.startDate !== undefined) {
+      project.startDate = dto.startDate ? new Date(dto.startDate) : null;
+    }
+    if (dto.endDate !== undefined) {
+      project.endDate = dto.endDate ? new Date(dto.endDate) : null;
     }
 
     return this.projectRepository.save(project);

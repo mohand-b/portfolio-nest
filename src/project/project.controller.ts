@@ -1,15 +1,39 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UploadedFiles,
+  UseInterceptors,
+} from '@nestjs/common';
 import { ProjectService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
+import { UpdateProjectDto } from './dto/update-project.dto';
 import { ProjectEntity } from './project.entity';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 
-@Controller('project')
+@Controller('projects')
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
-  @Post()
-  async create(@Body() dto: CreateProjectDto): Promise<ProjectEntity> {
-    return this.projectService.create(dto);
+  @Post('create')
+  @UseInterceptors(FilesInterceptor('images', 4, { storage: memoryStorage() }))
+  async create(
+    @Body() dto: CreateProjectDto,
+    @UploadedFiles() files: Express.Multer.File[] = [],
+  ) {
+    return this.projectService.create(dto, files);
+  }
+
+  @Patch(':id')
+  async update(
+    @Param('id') id: string,
+    @Body() dto: UpdateProjectDto,
+  ): Promise<ProjectEntity> {
+    return this.projectService.update(id, dto);
   }
 
   @Get()

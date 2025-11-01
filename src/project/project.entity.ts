@@ -21,8 +21,8 @@ export class ProjectEntity extends TimelineItem {
   @JoinTable()
   skills: SkillEntity[];
 
-  @Column()
-  projectType: string;
+  @Column('text', { array: true })
+  projectTypes: string[];
 
   @Column()
   scope: string;

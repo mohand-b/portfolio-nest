@@ -1,21 +1,8 @@
-import {
-  IsArray,
-  IsDateString,
-  IsOptional,
-  IsString,
-  IsUUID,
-} from 'class-validator';
+import { IsArray, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class CreateProjectDto {
   @IsString()
   title: string;
-
-  @IsDateString()
-  startDate: string;
-
-  @IsDateString()
-  @IsOptional()
-  endDate?: string;
 
   @IsString()
   context: string;
@@ -36,8 +23,9 @@ export class CreateProjectDto {
   @IsOptional()
   skillIds?: string[];
 
-  @IsString()
-  projectType: string;
+  @IsArray()
+  @IsString({ each: true })
+  projectTypes: string[];
 
   @IsString()
   scope: string;
