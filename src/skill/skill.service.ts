@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SkillEntity } from './skill.entity';
@@ -15,7 +19,7 @@ export class SkillService {
     const existing = await this.skillRepository.findOneBy({ name: dto.name });
 
     if (existing) {
-      throw new BadRequestException(`La compétence "${dto.name}" existe déjà.`);
+      throw new ConflictException(`La compétence "${dto.name}" existe déjà.`);
     }
 
     const skill = this.skillRepository.create(dto);

@@ -28,15 +28,4 @@ export class CertificationController {
     }
     return this.certificationService.create(dto);
   }
-
-  async findAll(): Promise<any[]> {
-    const certifications = await this.certificationRepository.find({
-      order: { endDate: 'DESC' },
-    });
-
-    return certifications.map((cert) => ({
-      ...cert,
-      image: bufferToBase64(cert.image),
-    }));
-  }
 }

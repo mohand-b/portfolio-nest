@@ -23,6 +23,15 @@ export class AchievementEntity {
   @Column({ nullable: true })
   description?: string;
 
+  @Column({ nullable: true })
+  color?: string;
+
+  @Column({ nullable: true })
+  icon?: string;
+
+  @Column({ default: true })
+  isActive: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 

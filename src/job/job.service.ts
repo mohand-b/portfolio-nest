@@ -6,6 +6,7 @@ import { CreateJobDto } from './dto/create-job.dto';
 import { TimelineItemTypeEnum } from '../common/enums/timeline-item-type.enum';
 import { toValidDate } from '../utils/date.utils';
 import { parseArrayField } from '../utils/array.utils';
+import { bufferToBase64 } from '../utils/image.utils';
 
 @Injectable()
 export class JobService {
