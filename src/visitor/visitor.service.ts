@@ -101,7 +101,9 @@ export class VisitorService {
   async getAchievementsForVisitor(
     visitorId: string,
   ): Promise<AchievementWithStatusDto[]> {
-    const allAchievements = await this.achievementRepository.find();
+    const allAchievements = await this.achievementRepository.find({
+      relations: ['visitors'],
+    });
     const visitor = await this.visitorRepository.findOne({
       where: { id: visitorId },
       relations: ['achievements'],
@@ -111,6 +113,7 @@ export class VisitorService {
     return allAchievements.map((a) => ({
       ...a,
       unlocked: unlocked.includes(a.id),
+      unlockedCount: a.visitors?.length || 0,
     }));
   }
 

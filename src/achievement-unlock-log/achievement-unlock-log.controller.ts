@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, UseGuards } from '@nestjs/common';
 import { AchievementUnlockLogService } from './achievement-unlock-log.service';
 import { AchievementUnlockLogDto } from './dto/achievement-unlock-log.dto';
 import { JwtAdminGuard } from '../core/guards/jwt-admin.guard';
@@ -13,5 +13,13 @@ export class AchievementUnlockLogController {
   @Get()
   findAll(): Promise<AchievementUnlockLogDto[]> {
     return this.achievementUnlockLogService.findAll();
+  }
+
+  @UseGuards(JwtAdminGuard)
+  @Get('achievement/:code')
+  findByAchievementCode(
+    @Param('code') code: string,
+  ): Promise<AchievementUnlockLogDto[]> {
+    return this.achievementUnlockLogService.findByAchievementCode(code);
   }
 }

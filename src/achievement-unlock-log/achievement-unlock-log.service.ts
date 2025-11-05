@@ -27,4 +27,24 @@ export class AchievementUnlockLogService {
       achievementLabel: log.achievement.label,
     }));
   }
+
+  async findByAchievementCode(
+    code: string,
+  ): Promise<AchievementUnlockLogDto[]> {
+    const logs = await this.achievementUnlockLogRepository.find({
+      where: { achievement: { code } },
+      order: { unlockedAt: 'DESC' },
+      relations: ['visitor', 'achievement'],
+    });
+
+    return logs.map((log) => ({
+      id: log.id,
+      unlockedAt: log.unlockedAt,
+      visitorId: log.visitor.id,
+      visitorName: log.visitor.firstName + ' ' + log.visitor.lastName,
+      achievementId: log.achievement.id,
+      achievementCode: log.achievement.code,
+      achievementLabel: log.achievement.label,
+    }));
+  }
 }

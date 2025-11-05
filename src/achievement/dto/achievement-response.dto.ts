@@ -1,11 +1,11 @@
-export class AchievementWithStatusDto {
+export class AchievementResponseDto {
   id: string;
   code: string;
   label: string;
   description?: string;
-  icon?: string;
   color?: string;
+  icon?: string;
   isActive: boolean;
-  unlocked: boolean;
+  createdAt: Date;
   unlockedCount: number;
 }

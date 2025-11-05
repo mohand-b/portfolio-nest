@@ -11,6 +11,8 @@ import { AchievementService } from './achievement.service';
 import { JwtAdminGuard } from '../core/guards/jwt-admin.guard';
 import { CreateAchievementDto } from './dto/create-achievement.dto';
 import { AchievementEntity } from './achievement.entity';
+import { AchievementResponseDto } from './dto/achievement-response.dto';
+import { AchievementStatsDto } from './dto/achievement-stats.dto';
 
 @Controller('achievements')
 export class AchievementController {
@@ -23,8 +25,14 @@ export class AchievementController {
   }
 
   @UseGuards(JwtAdminGuard)
+  @Get('stats')
+  getStats(): Promise<AchievementStatsDto> {
+    return this.achievementService.getStats();
+  }
+
+  @UseGuards(JwtAdminGuard)
   @Get()
-  findAll(): Promise<AchievementEntity[]> {
+  findAll(): Promise<AchievementResponseDto[]> {
     return this.achievementService.findAll();
   }
 
