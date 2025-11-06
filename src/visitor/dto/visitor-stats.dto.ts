@@ -1,6 +1,6 @@
 export class VisitorStatsDto {
   totalVisitors: number;
-  activeVisitors: number;
+  verifiedVisitors: number;
   visitorsToday: number;
   engagedVisitors: number;
 }

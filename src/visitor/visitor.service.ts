@@ -225,12 +225,9 @@ export class VisitorService {
       },
     });
 
-    const oneDayAgo = new Date();
-    oneDayAgo.setDate(oneDayAgo.getDate() - 1);
-
-    const activeVisitors = await this.visitorRepository.count({
+    const verifiedVisitors = await this.visitorRepository.count({
       where: {
-        lastVisitAt: MoreThanOrEqual(oneDayAgo),
+        isVerified: true,
       },
     });
 
@@ -250,12 +247,12 @@ export class VisitorService {
         totalActiveAchievements > 0
           ? (unlockedActiveAchievements / totalActiveAchievements) * 100
           : 0;
-      return percentCompletion >= 50;
+      return percentCompletion >= 40;
     }).length;
 
     return {
       totalVisitors,
-      activeVisitors,
+      verifiedVisitors,
       visitorsToday,
       engagedVisitors,
     };
