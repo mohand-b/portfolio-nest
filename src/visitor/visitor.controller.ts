@@ -18,6 +18,7 @@ import { AchievementUnlockResponseDto } from '../achievement/dto/achievement-unl
 import { Response } from 'express';
 import { VisitorAuthResponse } from './dto/visitor-auth-response.dto';
 import { JwtAdminGuard } from '../core/guards/jwt-admin.guard';
+import { PaginatedVisitorsResponseDto } from './dto/paginated-visitors-response.dto';
 
 @Controller('visitor')
 export class VisitorController {
@@ -103,7 +104,12 @@ export class VisitorController {
 
   @UseGuards(JwtAdminGuard)
   @Get('all')
-  getAllVisitors(): Promise<VisitorDto[]> {
-    return this.visitorService.findAll();
+  getAllVisitors(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '10',
+  ): Promise<PaginatedVisitorsResponseDto> {
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    return this.visitorService.findAll(pageNum, limitNum);
   }
 }

@@ -16,6 +16,9 @@ import { AchievementWithStatusDto } from '../achievement/dto/achievement-with-st
 import { AchievementUnlockResponseDto } from '../achievement/dto/achievement-unlock-response.dto';
 import { AchievementUnlockLogEntity } from '../achievement-unlock-log/achievement-unlock-log.entity';
 import { ConfigService } from '@nestjs/config';
+import { AvatarService } from './avatar.service';
+import { VisitorResponseDto } from './dto/visitor-response.dto';
+import { PaginatedVisitorsResponseDto } from './dto/paginated-visitors-response.dto';
 
 @Injectable()
 export class VisitorService {
@@ -28,6 +31,7 @@ export class VisitorService {
     private readonly achievementUnlockLogRepository: Repository<AchievementUnlockLogEntity>,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
+    private readonly avatarService: AvatarService,
   ) {}
 
   async authenticate(dto: VisitorDto): Promise<any> {
@@ -50,6 +54,7 @@ export class VisitorService {
     }
 
     visitor.lastVisitAt = new Date();
+    await this.visitorRepository.save(visitor);
 
     return this.buildAuthResponse(visitor);
   }
@@ -152,8 +157,59 @@ export class VisitorService {
     };
   }
 
-  findAll(): Promise<VisitorEntity[]> {
-    return this.visitorRepository.find();
+  async findAll(
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<PaginatedVisitorsResponseDto> {
+    const skip = (page - 1) * limit;
+
+    const [visitors, total] = await this.visitorRepository.findAndCount({
+      relations: ['achievements'],
+      skip,
+      take: limit,
+      order: { createdAt: 'DESC' },
+    });
+
+    const totalActiveAchievements = await this.achievementRepository.count({
+      where: { isActive: true },
+    });
+
+    const data: VisitorResponseDto[] = visitors.map((visitor) => {
+      const unlockedActiveAchievements = visitor.achievements.filter(
+        (a) => a.isActive,
+      ).length;
+
+      const percentCompletion =
+        totalActiveAchievements > 0
+          ? Math.round(
+              (unlockedActiveAchievements / totalActiveAchievements) * 100,
+            )
+          : 0;
+
+      return {
+        id: visitor.id,
+        firstName: visitor.firstName,
+        lastName: visitor.lastName,
+        email: visitor.email,
+        isVerified: visitor.isVerified,
+        createdAt: visitor.createdAt,
+        lastVisitAt: visitor.lastVisitAt,
+        avatarSvg: visitor.avatarSvg,
+        achievements: {
+          unlocked: unlockedActiveAchievements,
+          total: totalActiveAchievements,
+          percentCompletion,
+        },
+      };
+    });
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   private async findByEmail(email: string): Promise<VisitorEntity | null> {
@@ -177,6 +233,10 @@ export class VisitorService {
       verificationExpiresAt: addDays(new Date(), 7),
       lastVisitAt: new Date(),
     });
+    await this.visitorRepository.save(visitor);
+
+    const svg = this.avatarService.generate(visitor.id);
+    visitor.avatarSvg = svg;
     return this.visitorRepository.save(visitor);
   }
 
@@ -239,6 +299,7 @@ export class VisitorService {
       refreshToken,
       isVerified: visitor.isVerified,
       lastVisitAt: visitor.lastVisitAt,
+      avatarSvg: visitor.avatarSvg,
       ...(message ? { message } : {}),
     };
   }

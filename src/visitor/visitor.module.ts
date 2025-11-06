@@ -1,11 +1,14 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { VisitorController } from './visitor.controller';
 import { VisitorService } from './visitor.service';
 import { VisitorEntity } from './visitor.entity';
 import { CoreModule } from '../core/core.module';
 import { AchievementEntity } from '../achievement/achievement.entity';
 import { AchievementUnlockLogEntity } from '../achievement-unlock-log/achievement-unlock-log.entity';
+import { AvatarService } from './avatar.service';
+import { VisitorActivityInterceptor } from './visitor-activity.interceptor';
 
 @Module({
   imports: [
@@ -17,7 +20,14 @@ import { AchievementUnlockLogEntity } from '../achievement-unlock-log/achievemen
     CoreModule,
   ],
   controllers: [VisitorController],
-  providers: [VisitorService],
+  providers: [
+    VisitorService,
+    AvatarService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: VisitorActivityInterceptor,
+    },
+  ],
   exports: [VisitorService],
 })
 export class VisitorModule {}

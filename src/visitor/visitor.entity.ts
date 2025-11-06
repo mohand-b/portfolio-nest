@@ -39,6 +39,9 @@ export class VisitorEntity {
   @Column()
   lastVisitAt: Date;
 
+  @Column({ type: 'text', nullable: true })
+  avatarSvg?: string;
+
   @ManyToMany(() => AchievementEntity, (achievement) => achievement.visitors, {
     cascade: true,
   })
