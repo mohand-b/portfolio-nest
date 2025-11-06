@@ -4,7 +4,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, MoreThanOrEqual } from 'typeorm';
 import { VisitorEntity } from './visitor.entity';
 import { randomUUID } from 'crypto';
 import { addDays } from 'date-fns';
@@ -19,6 +19,7 @@ import { ConfigService } from '@nestjs/config';
 import { AvatarService } from './avatar.service';
 import { VisitorResponseDto } from './dto/visitor-response.dto';
 import { PaginatedVisitorsResponseDto } from './dto/paginated-visitors-response.dto';
+import { VisitorStatsDto } from './dto/visitor-stats.dto';
 
 @Injectable()
 export class VisitorService {
@@ -209,6 +210,54 @@ export class VisitorService {
       page,
       limit,
       totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  async getStats(): Promise<VisitorStatsDto> {
+    const totalVisitors = await this.visitorRepository.count();
+
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const visitorsToday = await this.visitorRepository.count({
+      where: {
+        lastVisitAt: MoreThanOrEqual(startOfToday),
+      },
+    });
+
+    const oneDayAgo = new Date();
+    oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+
+    const activeVisitors = await this.visitorRepository.count({
+      where: {
+        lastVisitAt: MoreThanOrEqual(oneDayAgo),
+      },
+    });
+
+    const allVisitors = await this.visitorRepository.find({
+      relations: ['achievements'],
+    });
+
+    const totalActiveAchievements = await this.achievementRepository.count({
+      where: { isActive: true },
+    });
+
+    const engagedVisitors = allVisitors.filter((visitor) => {
+      const unlockedActiveAchievements = visitor.achievements.filter(
+        (a) => a.isActive,
+      ).length;
+      const percentCompletion =
+        totalActiveAchievements > 0
+          ? (unlockedActiveAchievements / totalActiveAchievements) * 100
+          : 0;
+      return percentCompletion >= 50;
+    }).length;
+
+    return {
+      totalVisitors,
+      activeVisitors,
+      visitorsToday,
+      engagedVisitors,
     };
   }
 

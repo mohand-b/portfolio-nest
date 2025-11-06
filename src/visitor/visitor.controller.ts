@@ -19,6 +19,7 @@ import { Response } from 'express';
 import { VisitorAuthResponse } from './dto/visitor-auth-response.dto';
 import { JwtAdminGuard } from '../core/guards/jwt-admin.guard';
 import { PaginatedVisitorsResponseDto } from './dto/paginated-visitors-response.dto';
+import { VisitorStatsDto } from './dto/visitor-stats.dto';
 
 @Controller('visitor')
 export class VisitorController {
@@ -100,6 +101,12 @@ export class VisitorController {
     @Req() req: any,
   ): Promise<AchievementWithStatusDto[]> {
     return this.visitorService.getAchievementsForVisitor(req.user.id);
+  }
+
+  @UseGuards(JwtAdminGuard)
+  @Get('stats')
+  getStats(): Promise<VisitorStatsDto> {
+    return this.visitorService.getStats();
   }
 
   @UseGuards(JwtAdminGuard)

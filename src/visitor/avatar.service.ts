@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { createAvatar } from '@dicebear/core';
-import { avataaarsNeutral } from '@dicebear/collection';
+import { avataaars } from '@dicebear/collection';
 
 @Injectable()
 export class AvatarService {
@@ -17,7 +17,7 @@ export class AvatarService {
       this.simpleHash(seed) % this.backgroundColors.length;
     const backgroundColor = this.backgroundColors[backgroundIndex];
 
-    const avatar = createAvatar(avataaarsNeutral, {
+    const avatar = createAvatar(avataaars, {
       seed,
       backgroundColor: [backgroundColor],
       backgroundType: ['gradientLinear'],
