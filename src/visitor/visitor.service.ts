@@ -4,7 +4,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, MoreThanOrEqual } from 'typeorm';
+import { MoreThanOrEqual, Repository } from 'typeorm';
 import { VisitorEntity } from './visitor.entity';
 import { randomUUID } from 'crypto';
 import { addDays } from 'date-fns';
@@ -256,6 +256,14 @@ export class VisitorService {
       visitorsToday,
       engagedVisitors,
     };
+  }
+
+  async delete(id: string): Promise<void> {
+    const visitor = await this.visitorRepository.findOneBy({ id });
+    if (!visitor) {
+      throw new NotFoundException('Visiteur non trouvé');
+    }
+    await this.visitorRepository.delete(id);
   }
 
   private async findByEmail(email: string): Promise<VisitorEntity | null> {

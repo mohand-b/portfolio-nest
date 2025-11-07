@@ -59,4 +59,13 @@ export class SkillController {
   async updateLevel(@Param('id') id: string, @Body() dto: { level: number }) {
     return this.skillService.updateLevel(id, dto.level);
   }
+
+  @UseGuards(JwtAdminGuard)
+  @Delete('all')
+  async deleteAll(): Promise<{ message: string }> {
+    await this.skillService.deleteAll();
+    return {
+      message: 'Toutes les compétences ont été supprimées avec succès.',
+    };
+  }
 }

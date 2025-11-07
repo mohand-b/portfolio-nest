@@ -151,4 +151,8 @@ export class ProjectService {
       totalPages: Math.ceil(total / limit),
     };
   }
+
+  async deleteAll(): Promise<void> {
+    await this.projectRepository.delete({});
+  }
 }

@@ -2,24 +2,25 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
   Query,
   Req,
   Res,
-  UseGuards,
-} from '@nestjs/common';
-import { VisitorService } from './visitor.service';
-import { VisitorDto } from './dto/visitor.dto';
-import { JwtVisitorGuard } from '../core/guards/jwt-visitor.guard';
-import { AchievementWithStatusDto } from '../achievement/dto/achievement-with-status.dto';
-import { AchievementUnlockResponseDto } from '../achievement/dto/achievement-unlock-response.dto';
-import { Response } from 'express';
-import { VisitorAuthResponse } from './dto/visitor-auth-response.dto';
-import { JwtAdminGuard } from '../core/guards/jwt-admin.guard';
-import { PaginatedVisitorsResponseDto } from './dto/paginated-visitors-response.dto';
-import { VisitorStatsDto } from './dto/visitor-stats.dto';
+  UseGuards
+} from "@nestjs/common";
+import { VisitorService } from "./visitor.service";
+import { VisitorDto } from "./dto/visitor.dto";
+import { JwtVisitorGuard } from "../core/guards/jwt-visitor.guard";
+import { AchievementWithStatusDto } from "../achievement/dto/achievement-with-status.dto";
+import { AchievementUnlockResponseDto } from "../achievement/dto/achievement-unlock-response.dto";
+import { Response } from "express";
+import { VisitorAuthResponse } from "./dto/visitor-auth-response.dto";
+import { JwtAdminGuard } from "../core/guards/jwt-admin.guard";
+import { PaginatedVisitorsResponseDto } from "./dto/paginated-visitors-response.dto";
+import { VisitorStatsDto } from "./dto/visitor-stats.dto";
 
 @Controller('visitor')
 export class VisitorController {
@@ -118,5 +119,12 @@ export class VisitorController {
     const pageNum = parseInt(page, 10);
     const limitNum = parseInt(limit, 10);
     return this.visitorService.findAll(pageNum, limitNum);
+  }
+
+  @UseGuards(JwtAdminGuard)
+  @Delete(':id')
+  async delete(@Param('id') id: string): Promise<{ message: string }> {
+    await this.visitorService.delete(id);
+    return { message: 'Visiteur supprimé avec succès.' };
   }
 }

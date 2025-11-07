@@ -1,4 +1,16 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UploadedFiles, UseInterceptors, } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UploadedFiles,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { ProjectEntity } from './project.entity';
@@ -7,6 +19,7 @@ import { memoryStorage } from 'multer';
 import { ProjectService } from './project.service';
 import { ProjectFilterDto } from './dto/project-filter.dto';
 import { PaginatedProjectsResponseDto } from './dto/pagined-projects-response.dto';
+import { JwtAdminGuard } from '../core/guards/jwt-admin.guard';
 
 @Controller('projects')
 export class ProjectController {
@@ -43,5 +56,12 @@ export class ProjectController {
     const pageNum = parseInt(page, 10);
     const limitNum = parseInt(limit, 10);
     return this.projectService.findAllWithFilters(filters, pageNum, limitNum);
+  }
+
+  @UseGuards(JwtAdminGuard)
+  @Delete('all')
+  async deleteAll(): Promise<{ message: string }> {
+    await this.projectService.deleteAll();
+    return { message: 'Tous les projets ont été supprimés.' };
   }
 }

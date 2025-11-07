@@ -68,4 +68,8 @@ export class SkillService {
     if (!skill) throw new BadRequestException('Compétence non trouvée');
     await this.skillRepository.delete(id);
   }
+
+  async deleteAll(): Promise<void> {
+    await this.skillRepository.delete({});
+  }
 }
