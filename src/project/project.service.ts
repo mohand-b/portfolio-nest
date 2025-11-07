@@ -9,6 +9,10 @@ import { JobEntity } from '../job/job.entity';
 import { SkillEntity } from '../skill/skill.entity';
 import { parseArrayField } from '../utils/array.utils';
 import { buffersToBase64 } from '../utils/image.utils';
+import { plainToInstance } from 'class-transformer';
+import { ProjectResponseDto } from './dto/project-response.dto';
+import { PaginatedProjectsResponseDto } from './dto/pagined-projects-response.dto';
+import { ProjectFilterDto } from './dto/project-filter.dto';
 
 @Injectable()
 export class ProjectService {
@@ -85,5 +89,66 @@ export class ProjectService {
       ...project,
       images: buffersToBase64(project.images),
     }));
+  }
+
+  async findAllWithFilters(
+    filters: ProjectFilterDto,
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<PaginatedProjectsResponseDto> {
+    const skip = (page - 1) * limit;
+
+    const queryBuilder = this.projectRepository
+      .createQueryBuilder('project')
+      .leftJoinAndSelect('project.skills', 'skill')
+      .leftJoinAndSelect('project.job', 'job');
+
+    if (filters.projectTypes && filters.projectTypes.length > 0) {
+      queryBuilder.andWhere('project.projectTypes && :projectTypes', {
+        projectTypes: filters.projectTypes,
+      });
+    }
+
+    if (filters.title) {
+      queryBuilder.andWhere('LOWER(project.title) LIKE LOWER(:title)', {
+        title: `%${filters.title}%`,
+      });
+    }
+
+    if (filters.skillIds && filters.skillIds.length > 0) {
+      queryBuilder.andWhere('skill.id IN (:...skillIds)', {
+        skillIds: filters.skillIds,
+      });
+    }
+
+    if (filters.isPersonal !== undefined) {
+      if (filters.isPersonal) {
+        queryBuilder.andWhere('project.job IS NULL');
+      } else {
+        queryBuilder.andWhere('project.job IS NOT NULL');
+      }
+    }
+
+    const total = await queryBuilder.getCount();
+
+    const projects = await queryBuilder
+      .orderBy('project.endDate', 'DESC')
+      .skip(skip)
+      .take(limit)
+      .getMany();
+
+    const data = projects.map((project) =>
+      plainToInstance(ProjectResponseDto, project, {
+        excludeExtraneousValues: true,
+      }),
+    );
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 }
