@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { SkillService } from './skill.service';
@@ -26,6 +27,15 @@ export class SkillController {
   @Get()
   async findAll(): Promise<SkillEntity[]> {
     return this.skillService.findAll();
+  }
+
+  @Get('search')
+  async search(
+    @Query('q') query: string,
+    @Query('limit') limit?: number,
+  ): Promise<SkillEntity[]> {
+    const searchLimit = limit ? parseInt(limit.toString(), 10) : 10;
+    return this.skillService.search(query, searchLimit);
   }
 
   @UseGuards(JwtAdminGuard)

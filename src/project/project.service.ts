@@ -34,7 +34,6 @@ export class ProjectService {
       context: dto.context,
       collaboration: dto.collaboration,
       missions: parseArrayField(dto.missions),
-      tools: parseArrayField(dto.tools),
       projectTypes: parseArrayField(dto.projectTypes),
       scope: dto.scope,
       market: dto.market,
@@ -48,9 +47,11 @@ export class ProjectService {
     if (dto.jobId) {
       project.job = await this.jobRepository.findOneBy({ id: dto.jobId });
     }
-    if (dto.skillIds?.length) {
+
+    const skillIds = parseArrayField(dto.skillIds);
+    if (skillIds.length) {
       project.skills = await this.skillRepository.find({
-        where: { id: In(dto.skillIds) },
+        where: { id: In(skillIds) },
       });
     }
 

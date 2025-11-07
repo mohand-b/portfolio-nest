@@ -14,9 +14,6 @@ export class ProjectEntity extends TimelineItem {
   @Column('text', { array: true })
   missions: string[];
 
-  @Column('text', { array: true })
-  tools: string[];
-
   @ManyToMany(() => SkillEntity, { cascade: true })
   @JoinTable()
   skills: SkillEntity[];

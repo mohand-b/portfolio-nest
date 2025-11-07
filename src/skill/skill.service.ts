@@ -32,6 +32,15 @@ export class SkillService {
     });
   }
 
+  async search(query: string, limit: number = 10): Promise<SkillEntity[]> {
+    return this.skillRepository
+      .createQueryBuilder('skill')
+      .where('LOWER(skill.name) LIKE LOWER(:query)', { query: `%${query}%` })
+      .orderBy('skill.name', 'ASC')
+      .limit(limit)
+      .getMany();
+  }
+
   async updateCategory(id: string, category: string): Promise<SkillEntity> {
     const skill = await this.skillRepository.findOneBy({ id });
     if (!skill) throw new BadRequestException('Compétence non trouvée');

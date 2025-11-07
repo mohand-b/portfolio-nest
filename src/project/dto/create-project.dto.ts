@@ -15,10 +15,6 @@ export class CreateProjectDto {
   @IsString({ each: true })
   missions: string[];
 
-  @IsArray()
-  @IsString({ each: true })
-  tools: string[];
-
   @IsUUID('all', { each: true })
   @IsOptional()
   skillIds?: string[];
