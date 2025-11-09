@@ -19,6 +19,7 @@ import { memoryStorage } from 'multer';
 import { ProjectService } from './project.service';
 import { ProjectFilterDto } from './dto/project-filter.dto';
 import { PaginatedProjectsResponseDto } from './dto/pagined-projects-response.dto';
+import { PaginatedProjectsLightResponseDto } from './dto/paginated-projects-light-response.dto';
 import { JwtAdminGuard } from '../core/guards/jwt-admin.guard';
 
 @Controller('projects')
@@ -52,7 +53,7 @@ export class ProjectController {
     @Query() filters: ProjectFilterDto,
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
-  ): Promise<PaginatedProjectsResponseDto> {
+  ): Promise<PaginatedProjectsLightResponseDto> {
     const pageNum = parseInt(page, 10);
     const limitNum = parseInt(limit, 10);
     return this.projectService.findAllWithFilters(filters, pageNum, limitNum);

@@ -13,6 +13,8 @@ import { plainToInstance } from 'class-transformer';
 import { ProjectResponseDto } from './dto/project-response.dto';
 import { PaginatedProjectsResponseDto } from './dto/pagined-projects-response.dto';
 import { ProjectFilterDto } from './dto/project-filter.dto';
+import { ProjectLightResponseDto } from './dto/project-light-response.dto';
+import { PaginatedProjectsLightResponseDto } from './dto/paginated-projects-light-response.dto';
 
 @Injectable()
 export class ProjectService {
@@ -35,6 +37,7 @@ export class ProjectService {
 
     const project = this.projectRepository.create({
       title: dto.title,
+      description: dto.description,
       context: dto.context,
       collaboration: dto.collaboration,
       missions: parseArrayField(dto.missions),
@@ -82,7 +85,7 @@ export class ProjectService {
   async findAll(): Promise<any[]> {
     const projects = await this.projectRepository.find({
       relations: ['skills', 'job'],
-      order: { endDate: 'DESC' },
+      order: { createdAt: 'DESC' },
     });
 
     return projects.map((project) => ({
@@ -95,7 +98,7 @@ export class ProjectService {
     filters: ProjectFilterDto,
     page: number = 1,
     limit: number = 10,
-  ): Promise<PaginatedProjectsResponseDto> {
+  ): Promise<PaginatedProjectsLightResponseDto> {
     const skip = (page - 1) * limit;
 
     const queryBuilder = this.projectRepository
@@ -132,13 +135,13 @@ export class ProjectService {
     const total = await queryBuilder.getCount();
 
     const projects = await queryBuilder
-      .orderBy('project.endDate', 'DESC')
+      .orderBy('project.createdAt', 'DESC')
       .skip(skip)
       .take(limit)
       .getMany();
 
     const data = projects.map((project) =>
-      plainToInstance(ProjectResponseDto, project, {
+      plainToInstance(ProjectLightResponseDto, project, {
         excludeExtraneousValues: true,
       }),
     );
@@ -153,6 +156,6 @@ export class ProjectService {
   }
 
   async deleteAll(): Promise<void> {
-    await this.projectRepository.delete({});
+    await this.projectRepository.createQueryBuilder().delete().execute();
   }
 }

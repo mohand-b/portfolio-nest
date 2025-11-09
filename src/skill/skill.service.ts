@@ -70,6 +70,6 @@ export class SkillService {
   }
 
   async deleteAll(): Promise<void> {
-    await this.skillRepository.delete({});
+    await this.skillRepository.createQueryBuilder().delete().execute();
   }
 }

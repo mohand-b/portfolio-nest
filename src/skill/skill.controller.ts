@@ -39,13 +39,6 @@ export class SkillController {
   }
 
   @UseGuards(JwtAdminGuard)
-  @Delete(':id')
-  async delete(@Param('id') id: string) {
-    await this.skillService.delete(id);
-    return { message: 'Compétence supprimée avec succès.' };
-  }
-
-  @UseGuards(JwtAdminGuard)
   @Patch(':id/category')
   async updateCategory(
     @Param('id') id: string,
@@ -65,7 +58,14 @@ export class SkillController {
   async deleteAll(): Promise<{ message: string }> {
     await this.skillService.deleteAll();
     return {
-      message: 'Toutes les compétences ont été supprimées avec succès.',
+      message: 'Toutes les compétences ont été supprimées.',
     };
+  }
+
+  @UseGuards(JwtAdminGuard)
+  @Delete(':id')
+  async delete(@Param('id') id: string) {
+    await this.skillService.delete(id);
+    return { message: 'Compétence supprimée avec succès.' };
   }
 }

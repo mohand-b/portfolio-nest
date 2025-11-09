@@ -9,18 +9,18 @@ import {
   Query,
   Req,
   Res,
-  UseGuards
-} from "@nestjs/common";
-import { VisitorService } from "./visitor.service";
-import { VisitorDto } from "./dto/visitor.dto";
-import { JwtVisitorGuard } from "../core/guards/jwt-visitor.guard";
-import { AchievementWithStatusDto } from "../achievement/dto/achievement-with-status.dto";
-import { AchievementUnlockResponseDto } from "../achievement/dto/achievement-unlock-response.dto";
-import { Response } from "express";
-import { VisitorAuthResponse } from "./dto/visitor-auth-response.dto";
-import { JwtAdminGuard } from "../core/guards/jwt-admin.guard";
-import { PaginatedVisitorsResponseDto } from "./dto/paginated-visitors-response.dto";
-import { VisitorStatsDto } from "./dto/visitor-stats.dto";
+  UseGuards,
+} from '@nestjs/common';
+import { VisitorService } from './visitor.service';
+import { VisitorDto } from './dto/visitor.dto';
+import { JwtVisitorGuard } from '../core/guards/jwt-visitor.guard';
+import { AchievementWithStatusDto } from '../achievement/dto/achievement-with-status.dto';
+import { AchievementUnlockResponseDto } from '../achievement/dto/achievement-unlock-response.dto';
+import { Response } from 'express';
+import { VisitorAuthResponse } from './dto/visitor-auth-response.dto';
+import { JwtAdminGuard } from '../core/guards/jwt-admin.guard';
+import { PaginatedVisitorsResponseDto } from './dto/paginated-visitors-response.dto';
+import { VisitorStatsDto } from './dto/visitor-stats.dto';
 
 @Controller('visitor')
 export class VisitorController {

@@ -5,7 +5,12 @@ export class CreateProjectDto {
   title: string;
 
   @IsString()
-  context: string;
+  @IsOptional()
+  description?: string;
+
+  @IsString()
+  @IsOptional()
+  context?: string;
 
   @IsString()
   @IsOptional()
