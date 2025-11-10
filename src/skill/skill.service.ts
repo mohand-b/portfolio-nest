@@ -43,7 +43,9 @@ export class SkillService {
 
   async updateCategory(id: string, category: string): Promise<SkillEntity> {
     const skill = await this.skillRepository.findOneBy({ id });
-    if (!skill) throw new BadRequestException('Compétence non trouvée');
+    if (!skill) {
+      throw new BadRequestException('Compétence non trouvée');
+    }
     if (skill.category === category) {
       throw new BadRequestException(
         'La compétence est déjà dans cette catégorie.',
@@ -55,7 +57,9 @@ export class SkillService {
 
   async updateLevel(id: string, newLevel: number): Promise<SkillEntity> {
     const skill = await this.skillRepository.findOneBy({ id });
-    if (!skill) throw new BadRequestException('Compétence non trouvée');
+    if (!skill) {
+      throw new BadRequestException('Compétence non trouvée');
+    }
     if (skill.level === newLevel) {
       throw new BadRequestException('La compétence a déjà ce niveau.');
     }
@@ -64,12 +68,13 @@ export class SkillService {
   }
 
   async delete(id: string): Promise<void> {
-    const skill = await this.skillRepository.findOneBy({ id });
-    if (!skill) throw new BadRequestException('Compétence non trouvée');
-    await this.skillRepository.delete(id);
+    const result = await this.skillRepository.delete(id);
+    if (result.affected === 0) {
+      throw new BadRequestException('Compétence non trouvée');
+    }
   }
 
   async deleteAll(): Promise<void> {
-    await this.skillRepository.createQueryBuilder().delete().execute();
+    await this.skillRepository.clear();
   }
 }

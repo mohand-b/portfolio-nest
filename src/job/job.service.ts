@@ -17,14 +17,11 @@ export class JobService {
 
   async create(dto: CreateJobDto): Promise<JobEntity> {
     const job = this.jobRepository.create({
-      title: dto.title,
+      ...dto,
       startDate: toValidDate(dto.startDate),
       endDate: toValidDate(dto.endDate),
-      company: dto.company,
-      location: dto.location,
       missions: parseArrayField(dto.missions),
       type: TimelineItemTypeEnum.JOB,
-      image: dto.image,
     });
 
     return this.jobRepository.save(job);

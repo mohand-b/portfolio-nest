@@ -1,23 +1,13 @@
-import { IsDateString, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsString } from 'class-validator';
+import { CertificationTypeEnum } from '../../common/enums/certification-type.enum';
 
 export class CreateCertificationDto {
   @IsString()
-  certificationName: string;
+  title: string;
 
-  @IsDateString()
-  @IsOptional()
-  startDate: string;
-
-  @IsDateString()
-  @IsOptional()
-  endDate: string;
+  @IsEnum(CertificationTypeEnum)
+  certificationType: CertificationTypeEnum;
 
   @IsString()
-  school: string;
-
-  @IsString()
-  location: string;
-
-  @IsOptional()
-  image?: Buffer;
+  educationId: string;
 }

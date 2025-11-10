@@ -1,6 +1,6 @@
 export enum TimelineItemTypeEnum {
   JOB = 'job',
   PROJECT = 'project',
-  CERTIFICATION = 'certification',
+  EDUCATION = 'education',
   OTHER = 'other',
 }

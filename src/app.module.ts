@@ -6,6 +6,7 @@ import { CoreModule } from './core/core.module';
 import { AdminModule } from './admin/admin.module';
 import { VisitorModule } from './visitor/visitor.module';
 import { CertificationModule } from './certification/certification.module';
+import { EducationModule } from './education/education.module';
 import { JobModule } from './job/job.module';
 import { ProjectModule } from './project/project.module';
 import { SkillModule } from './skill/skill.module';
@@ -32,6 +33,7 @@ import { AchievementUnlockLogModule } from './achievement-unlock-log/achievement
     AdminModule,
     VisitorModule,
     CertificationModule,
+    EducationModule,
     JobModule,
     ProjectModule,
     SkillModule,

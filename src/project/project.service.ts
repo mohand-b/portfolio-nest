@@ -31,23 +31,15 @@ export class ProjectService {
     dto: CreateProjectDto,
     files: Express.Multer.File[] = [],
   ): Promise<ProjectEntity> {
-    const images: Buffer[] = files
+    const images = files
       .filter((f) => f.mimetype?.startsWith('image/'))
       .map((f) => f.buffer);
 
     const project = this.projectRepository.create({
-      title: dto.title,
-      description: dto.description,
-      context: dto.context,
-      collaboration: dto.collaboration,
+      ...dto,
       missions: parseArrayField(dto.missions),
       projectTypes: parseArrayField(dto.projectTypes),
-      scope: dto.scope,
-      market: dto.market,
-      challenges: dto.challenges,
-      impact: dto.impact,
       images,
-      githubLink: dto.githubLink,
       type: TimelineItemTypeEnum.PROJECT,
     });
 
@@ -156,6 +148,6 @@ export class ProjectService {
   }
 
   async deleteAll(): Promise<void> {
-    await this.projectRepository.createQueryBuilder().delete().execute();
+    await this.projectRepository.clear();
   }
 }
