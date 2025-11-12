@@ -5,7 +5,7 @@ import { SkillEntity } from '../skill/skill.entity';
 
 @Entity()
 export class ProjectEntity extends TimelineItem {
-  @Column()
+  @Column({ nullable: true })
   context: string;
 
   @Column({ nullable: true })
