@@ -7,6 +7,7 @@ import { TimelineItemTypeEnum } from '../common/enums/timeline-item-type.enum';
 import { toValidDate } from '../utils/date.utils';
 import { parseArrayField } from '../utils/array.utils';
 import { bufferToBase64 } from '../utils/image.utils';
+import { JobMinimalResponseDto } from './dto/job-minimal-response.dto';
 
 @Injectable()
 export class JobService {
@@ -36,6 +37,19 @@ export class JobService {
     return jobs.map((job) => ({
       ...job,
       image: bufferToBase64(job.image),
+    }));
+  }
+
+  async findAllMinimal(): Promise<JobMinimalResponseDto[]> {
+    const jobs = await this.jobRepository.find({
+      select: ['id', 'company', 'image'],
+      order: { company: 'ASC' },
+    });
+
+    return jobs.map((job) => ({
+      id: job.id,
+      company: job.company,
+      logo: bufferToBase64(job.image),
     }));
   }
 }

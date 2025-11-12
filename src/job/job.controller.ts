@@ -12,6 +12,7 @@ import { CreateJobDto } from './dto/create-job.dto';
 import { JobEntity } from './job.entity';
 import { JwtAdminGuard } from '../core/guards/jwt-admin.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { JobMinimalResponseDto } from './dto/job-minimal-response.dto';
 
 @Controller('jobs')
 export class JobController {
@@ -33,5 +34,10 @@ export class JobController {
   @Get()
   async findAll(): Promise<JobEntity[]> {
     return this.jobService.findAll();
+  }
+
+  @Get('minimal')
+  async findAllMinimal(): Promise<JobMinimalResponseDto[]> {
+    return this.jobService.findAllMinimal();
   }
 }

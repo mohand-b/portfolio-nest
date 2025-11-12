@@ -21,6 +21,7 @@ import { ProjectFilterDto } from './dto/project-filter.dto';
 import { PaginatedProjectsResponseDto } from './dto/pagined-projects-response.dto';
 import { PaginatedProjectsLightResponseDto } from './dto/paginated-projects-light-response.dto';
 import { JwtAdminGuard } from '../core/guards/jwt-admin.guard';
+import { ProjectMinimalResponseDto } from './dto/project-minimal-response.dto';
 
 @Controller('projects')
 export class ProjectController {
@@ -46,6 +47,11 @@ export class ProjectController {
   @Get()
   async findAll(): Promise<ProjectEntity[]> {
     return this.projectService.findAll();
+  }
+
+  @Get('unlinked')
+  async findUnlinked(): Promise<ProjectMinimalResponseDto[]> {
+    return this.projectService.findUnlinkedProjects();
   }
 
   @Get('list')

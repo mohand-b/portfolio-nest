@@ -15,6 +15,7 @@ import { PaginatedProjectsResponseDto } from './dto/pagined-projects-response.dt
 import { ProjectFilterDto } from './dto/project-filter.dto';
 import { ProjectLightResponseDto } from './dto/project-light-response.dto';
 import { PaginatedProjectsLightResponseDto } from './dto/paginated-projects-light-response.dto';
+import { ProjectMinimalResponseDto } from './dto/project-minimal-response.dto';
 
 @Injectable()
 export class ProjectService {
@@ -145,6 +146,18 @@ export class ProjectService {
       limit,
       totalPages: Math.ceil(total / limit),
     };
+  }
+
+  async findUnlinkedProjects(): Promise<ProjectMinimalResponseDto[]> {
+    const projects = await this.projectRepository.find({
+      where: { job: null },
+      select: ['id', 'title'],
+      order: { title: 'ASC' },
+    });
+
+    return plainToInstance(ProjectMinimalResponseDto, projects, {
+      excludeExtraneousValues: true,
+    });
   }
 
   async deleteAll(): Promise<void> {
