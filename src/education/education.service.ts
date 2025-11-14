@@ -34,7 +34,9 @@ export class EducationService {
 
     Object.assign(education, {
       ...dto,
-      startDate: dto.startDate ? toValidDate(dto.startDate) : education.startDate,
+      startDate: dto.startDate
+        ? toValidDate(dto.startDate)
+        : education.startDate,
       endDate: dto.endDate ? toValidDate(dto.endDate) : education.endDate,
     });
 

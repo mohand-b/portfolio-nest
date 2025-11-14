@@ -39,8 +39,11 @@ export class AchievementService {
   async update(
     code: string,
     dto: UpdateAchievementDto,
-  ): Promise<AchievementEntity> {
-    const achievement = await this.achievementRepository.findOneBy({ code });
+  ): Promise<AchievementResponseDto> {
+    const achievement = await this.achievementRepository.findOne({
+      where: { code },
+      relations: ['visitors'],
+    });
     if (!achievement) {
       throw new BadRequestException(
         `Aucun succès trouvé avec le code « ${code} ».`,
@@ -48,7 +51,19 @@ export class AchievementService {
     }
 
     Object.assign(achievement, dto);
-    return this.achievementRepository.save(achievement);
+    const updated = await this.achievementRepository.save(achievement);
+
+    return {
+      id: updated.id,
+      code: updated.code,
+      label: updated.label,
+      description: updated.description,
+      color: updated.color,
+      icon: updated.icon,
+      isActive: updated.isActive,
+      createdAt: updated.createdAt,
+      unlockedCount: updated.visitors?.length || 0,
+    };
   }
 
   async findAll(): Promise<AchievementResponseDto[]> {
@@ -76,9 +91,8 @@ export class AchievementService {
   ): Promise<PaginatedAchievementsResponseDto> {
     const skip = (page - 1) * limit;
 
-    const queryBuilder = this.achievementRepository
-      .createQueryBuilder('achievement')
-      .leftJoinAndSelect('achievement.visitors', 'visitor');
+    const queryBuilder =
+      this.achievementRepository.createQueryBuilder('achievement');
 
     if (filters.label) {
       queryBuilder.andWhere('LOWER(achievement.label) LIKE LOWER(:label)', {
@@ -100,6 +114,20 @@ export class AchievementService {
       .take(limit)
       .getMany();
 
+    const achievementIds = achievements.map((a) => a.id);
+    const unlockCounts = await this.achievementRepository
+      .createQueryBuilder('achievement')
+      .leftJoin('achievement.visitors', 'visitor')
+      .select('achievement.id', 'achievementId')
+      .addSelect('COUNT(visitor.id)', 'count')
+      .where('achievement.id IN (:...ids)', { ids: achievementIds })
+      .groupBy('achievement.id')
+      .getRawMany();
+
+    const countMap = new Map(
+      unlockCounts.map((item) => [item.achievementId, parseInt(item.count)]),
+    );
+
     const data = achievements.map((achievement) => ({
       id: achievement.id,
       code: achievement.code,
@@ -109,7 +137,7 @@ export class AchievementService {
       icon: achievement.icon,
       isActive: achievement.isActive,
       createdAt: achievement.createdAt,
-      unlockedCount: achievement.visitors?.length || 0,
+      unlockedCount: countMap.get(achievement.id) || 0,
     }));
 
     return {

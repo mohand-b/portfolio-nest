@@ -34,8 +34,7 @@ export function base64ToBuffer(
 
   try {
     return Buffer.from(base64Data, 'base64');
-  } catch (error) {
-    console.error('Failed to convert base64 to buffer:', error);
+  } catch {
     return null;
   }
 }

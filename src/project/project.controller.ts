@@ -18,7 +18,6 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { ProjectService } from './project.service';
 import { ProjectFilterDto } from './dto/project-filter.dto';
-import { PaginatedProjectsResponseDto } from './dto/pagined-projects-response.dto';
 import { PaginatedProjectsLightResponseDto } from './dto/paginated-projects-light-response.dto';
 import { JwtAdminGuard } from '../core/guards/jwt-admin.guard';
 import { ProjectMinimalResponseDto } from './dto/project-minimal-response.dto';
@@ -63,6 +62,13 @@ export class ProjectController {
     const pageNum = parseInt(page, 10);
     const limitNum = parseInt(limit, 10);
     return this.projectService.findAllWithFilters(filters, pageNum, limitNum);
+  }
+
+  @UseGuards(JwtAdminGuard)
+  @Delete(':id')
+  async delete(@Param('id') id: string): Promise<{ message: string }> {
+    await this.projectService.delete(id);
+    return { message: 'Le projet a été supprimé.' };
   }
 
   @UseGuards(JwtAdminGuard)

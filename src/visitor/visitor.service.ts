@@ -99,7 +99,7 @@ export class VisitorService {
       );
 
       return { accessToken };
-    } catch (err) {
+    } catch {
       throw new UnauthorizedException('Refresh token invalide ou expiré');
     }
   }
@@ -298,10 +298,6 @@ export class VisitorService {
     visitor.verificationToken = randomUUID();
     visitor.verificationExpiresAt = addDays(new Date(), 7);
     await this.visitorRepository.save(visitor);
-
-    console.log(
-      `🔗 Verification link: http://localhost:3000/visitor/verify?token=${visitor.verificationToken}`,
-    );
   }
 
   private async issueJwt(visitor: VisitorEntity): Promise<string> {

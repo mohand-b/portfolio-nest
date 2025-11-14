@@ -10,8 +10,6 @@ import { SkillEntity } from '../skill/skill.entity';
 import { parseArrayField } from '../utils/array.utils';
 import { buffersToBase64 } from '../utils/image.utils';
 import { plainToInstance } from 'class-transformer';
-import { ProjectResponseDto } from './dto/project-response.dto';
-import { PaginatedProjectsResponseDto } from './dto/pagined-projects-response.dto';
 import { ProjectFilterDto } from './dto/project-filter.dto';
 import { ProjectLightResponseDto } from './dto/project-light-response.dto';
 import { PaginatedProjectsLightResponseDto } from './dto/paginated-projects-light-response.dto';
@@ -59,10 +57,31 @@ export class ProjectService {
   }
 
   async update(id: string, dto: UpdateProjectDto): Promise<ProjectEntity> {
-    const project = await this.projectRepository.findOneBy({ id });
+    const project = await this.projectRepository.findOne({
+      where: { id },
+      relations: ['skills', 'job'],
+    });
 
     if (!project) {
       throw new NotFoundException(`Project with ID ${id} not found`);
+    }
+
+    if (dto.title !== undefined) project.title = dto.title;
+    if (dto.description !== undefined) project.description = dto.description;
+    if (dto.context !== undefined) project.context = dto.context;
+    if (dto.collaboration !== undefined)
+      project.collaboration = dto.collaboration;
+    if (dto.scope !== undefined) project.scope = dto.scope;
+    if (dto.market !== undefined) project.market = dto.market;
+    if (dto.challenges !== undefined) project.challenges = dto.challenges;
+    if (dto.impact !== undefined) project.impact = dto.impact;
+    if (dto.githubLink !== undefined) project.githubLink = dto.githubLink;
+
+    if (dto.missions !== undefined) {
+      project.missions = parseArrayField(dto.missions);
+    }
+    if (dto.projectTypes !== undefined) {
+      project.projectTypes = parseArrayField(dto.projectTypes);
     }
 
     if (dto.startDate !== undefined) {
@@ -70,6 +89,25 @@ export class ProjectService {
     }
     if (dto.endDate !== undefined) {
       project.endDate = dto.endDate ? new Date(dto.endDate) : null;
+    }
+
+    if (dto.jobId !== undefined) {
+      if (dto.jobId === null || dto.jobId === '') {
+        project.job = null;
+      } else {
+        project.job = await this.jobRepository.findOneBy({ id: dto.jobId });
+      }
+    }
+
+    if (dto.skillIds !== undefined) {
+      const skillIds = parseArrayField(dto.skillIds);
+      if (skillIds.length > 0) {
+        project.skills = await this.skillRepository.find({
+          where: { id: In(skillIds) },
+        });
+      } else {
+        project.skills = [];
+      }
     }
 
     return this.projectRepository.save(project);
@@ -158,6 +196,14 @@ export class ProjectService {
     return plainToInstance(ProjectMinimalResponseDto, projects, {
       excludeExtraneousValues: true,
     });
+  }
+
+  async delete(id: string): Promise<void> {
+    const project = await this.projectRepository.findOneBy({ id });
+    if (!project) {
+      throw new NotFoundException(`Project with ID ${id} not found`);
+    }
+    await this.projectRepository.delete({ id });
   }
 
   async deleteAll(): Promise<void> {

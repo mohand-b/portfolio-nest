@@ -74,7 +74,7 @@ export class AdminService {
       );
 
       return { accessToken };
-    } catch (err) {
+    } catch {
       throw new UnauthorizedException('Refresh token invalide ou expiré');
     }
   }

@@ -17,15 +17,7 @@ export class AchievementUnlockLogService {
       relations: ['visitor', 'achievement'],
     });
 
-    return logs.map((log) => ({
-      id: log.id,
-      unlockedAt: log.unlockedAt,
-      visitorId: log.visitor.id,
-      visitorName: log.visitor.firstName + ' ' + log.visitor.lastName,
-      achievementId: log.achievement.id,
-      achievementCode: log.achievement.code,
-      achievementLabel: log.achievement.label,
-    }));
+    return logs.map((log) => this.mapToDto(log));
   }
 
   async findByAchievementCode(
@@ -37,14 +29,18 @@ export class AchievementUnlockLogService {
       relations: ['visitor', 'achievement'],
     });
 
-    return logs.map((log) => ({
+    return logs.map((log) => this.mapToDto(log));
+  }
+
+  private mapToDto(log: AchievementUnlockLogEntity): AchievementUnlockLogDto {
+    return {
       id: log.id,
       unlockedAt: log.unlockedAt,
       visitorId: log.visitor.id,
-      visitorName: log.visitor.firstName + ' ' + log.visitor.lastName,
+      visitorName: `${log.visitor.firstName} ${log.visitor.lastName}`,
       achievementId: log.achievement.id,
       achievementCode: log.achievement.code,
       achievementLabel: log.achievement.label,
-    }));
+    };
   }
 }

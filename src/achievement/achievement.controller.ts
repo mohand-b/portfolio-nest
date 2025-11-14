@@ -34,7 +34,7 @@ export class AchievementController {
   update(
     @Param('code') code: string,
     @Body() dto: UpdateAchievementDto,
-  ): Promise<AchievementEntity> {
+  ): Promise<AchievementResponseDto> {
     return this.achievementService.update(code, dto);
   }
 
