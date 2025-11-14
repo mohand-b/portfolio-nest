@@ -56,7 +56,11 @@ export class ProjectService {
     return this.projectRepository.save(project);
   }
 
-  async update(id: string, dto: UpdateProjectDto): Promise<ProjectEntity> {
+  async update(
+    id: string,
+    dto: UpdateProjectDto,
+    files: Express.Multer.File[] = [],
+  ): Promise<any> {
     const project = await this.projectRepository.findOne({
       where: { id },
       relations: ['skills', 'job'],
@@ -66,16 +70,23 @@ export class ProjectService {
       throw new NotFoundException(`Project with ID ${id} not found`);
     }
 
-    if (dto.title !== undefined) project.title = dto.title;
-    if (dto.description !== undefined) project.description = dto.description;
-    if (dto.context !== undefined) project.context = dto.context;
-    if (dto.collaboration !== undefined)
-      project.collaboration = dto.collaboration;
-    if (dto.scope !== undefined) project.scope = dto.scope;
-    if (dto.market !== undefined) project.market = dto.market;
-    if (dto.challenges !== undefined) project.challenges = dto.challenges;
-    if (dto.impact !== undefined) project.impact = dto.impact;
-    if (dto.githubLink !== undefined) project.githubLink = dto.githubLink;
+    const simpleFields = [
+      'title',
+      'description',
+      'context',
+      'collaboration',
+      'scope',
+      'market',
+      'challenges',
+      'impact',
+      'githubLink',
+    ];
+
+    simpleFields.forEach((field) => {
+      if (dto[field] !== undefined) {
+        project[field] = dto[field];
+      }
+    });
 
     if (dto.missions !== undefined) {
       project.missions = parseArrayField(dto.missions);
@@ -95,7 +106,11 @@ export class ProjectService {
       if (dto.jobId === null || dto.jobId === '') {
         project.job = null;
       } else {
-        project.job = await this.jobRepository.findOneBy({ id: dto.jobId });
+        const job = await this.jobRepository.findOneBy({ id: dto.jobId });
+        if (!job) {
+          throw new NotFoundException(`Job with ID ${dto.jobId} not found`);
+        }
+        project.job = job;
       }
     }
 
@@ -110,7 +125,27 @@ export class ProjectService {
       }
     }
 
-    return this.projectRepository.save(project);
+    // Handle image updates if files are provided
+    if (files && files.length > 0) {
+      const newImages = files
+        .filter((f) => f.mimetype?.startsWith('image/'))
+        .map((f) => f.buffer);
+      if (newImages.length > 0) {
+        project.images = newImages;
+      }
+    }
+
+    await this.projectRepository.save(project);
+
+    const updated = await this.projectRepository.findOne({
+      where: { id },
+      relations: ['skills', 'job'],
+    });
+
+    return {
+      ...updated,
+      images: buffersToBase64(updated.images),
+    };
   }
 
   async findAll(): Promise<any[]> {
@@ -123,6 +158,22 @@ export class ProjectService {
       ...project,
       images: buffersToBase64(project.images),
     }));
+  }
+
+  async findOne(id: string): Promise<any> {
+    const project = await this.projectRepository.findOne({
+      where: { id },
+      relations: ['skills', 'job'],
+    });
+
+    if (!project) {
+      throw new NotFoundException(`Project with ID ${id} not found`);
+    }
+
+    return {
+      ...project,
+      images: buffersToBase64(project.images),
+    };
   }
 
   async findAllWithFilters(

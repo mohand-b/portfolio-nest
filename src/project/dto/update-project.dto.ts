@@ -1,10 +1,4 @@
-import {
-  IsArray,
-  IsDateString,
-  IsOptional,
-  IsString,
-  IsUUID,
-} from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class UpdateProjectDto {
   @IsString()
@@ -23,19 +17,14 @@ export class UpdateProjectDto {
   @IsOptional()
   collaboration?: string;
 
-  @IsArray()
-  @IsString({ each: true })
   @IsOptional()
-  missions?: string[];
+  missions?: string[] | string;
 
-  @IsUUID('all', { each: true })
   @IsOptional()
-  skillIds?: string[];
+  skillIds?: string[] | string;
 
-  @IsArray()
-  @IsString({ each: true })
   @IsOptional()
-  projectTypes?: string[];
+  projectTypes?: string[] | string;
 
   @IsString()
   @IsOptional()
@@ -53,7 +42,7 @@ export class UpdateProjectDto {
   @IsOptional()
   impact?: string;
 
-  @IsUUID()
+  @IsString()
   @IsOptional()
   jobId?: string;
 
@@ -61,11 +50,11 @@ export class UpdateProjectDto {
   @IsOptional()
   githubLink?: string;
 
-  @IsDateString()
+  @IsString()
   @IsOptional()
   startDate?: string;
 
-  @IsDateString()
+  @IsString()
   @IsOptional()
   endDate?: string;
 }

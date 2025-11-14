@@ -36,11 +36,13 @@ export class ProjectController {
   }
 
   @Patch(':id')
+  @UseInterceptors(FilesInterceptor('images', 4, { storage: memoryStorage() }))
   async update(
     @Param('id') id: string,
     @Body() dto: UpdateProjectDto,
-  ): Promise<ProjectEntity> {
-    return this.projectService.update(id, dto);
+    @UploadedFiles() files: Express.Multer.File[] = [],
+  ): Promise<any> {
+    return this.projectService.update(id, dto, files);
   }
 
   @Get()
@@ -62,6 +64,11 @@ export class ProjectController {
     const pageNum = parseInt(page, 10);
     const limitNum = parseInt(limit, 10);
     return this.projectService.findAllWithFilters(filters, pageNum, limitNum);
+  }
+
+  @Get(':id')
+  async findOne(@Param('id') id: string): Promise<ProjectEntity> {
+    return this.projectService.findOne(id);
   }
 
   @UseGuards(JwtAdminGuard)
