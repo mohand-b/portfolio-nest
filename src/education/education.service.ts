@@ -71,6 +71,10 @@ export class EducationService {
   }
 
   async deleteAll(): Promise<void> {
-    await this.educationRepository.clear();
+    await this.educationRepository
+      .createQueryBuilder()
+      .delete()
+      .from(EducationEntity)
+      .execute();
   }
 }

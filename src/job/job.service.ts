@@ -52,4 +52,12 @@ export class JobService {
       logo: bufferToBase64(job.image),
     }));
   }
+
+  async deleteAll(): Promise<void> {
+    await this.jobRepository
+      .createQueryBuilder()
+      .delete()
+      .from(JobEntity)
+      .execute();
+  }
 }

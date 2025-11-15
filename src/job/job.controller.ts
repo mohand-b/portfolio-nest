@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Post,
   UploadedFile,
@@ -39,5 +40,12 @@ export class JobController {
   @Get('minimal')
   async findAllMinimal(): Promise<JobMinimalResponseDto[]> {
     return this.jobService.findAllMinimal();
+  }
+
+  @UseGuards(JwtAdminGuard)
+  @Delete('all')
+  async deleteAll(): Promise<{ message: string }> {
+    await this.jobService.deleteAll();
+    return { message: 'All jobs deleted successfully' };
   }
 }

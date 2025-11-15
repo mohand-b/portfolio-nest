@@ -3,9 +3,19 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { TimelineItem } from './timeline-item.entity';
 import { TimelineService } from './timeline.service';
 import { TimelineController } from './timeline.controller';
+import { JobEntity } from '../job/job.entity';
+import { ProjectEntity } from '../project/project.entity';
+import { EducationEntity } from '../education/education.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([TimelineItem])],
+  imports: [
+    TypeOrmModule.forFeature([
+      TimelineItem,
+      JobEntity,
+      ProjectEntity,
+      EducationEntity,
+    ]),
+  ],
   controllers: [TimelineController],
   providers: [TimelineService],
   exports: [TimelineService],

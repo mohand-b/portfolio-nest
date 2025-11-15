@@ -59,17 +59,17 @@ export class EducationController {
     return this.educationService.findOne(id);
   }
 
-  @Delete(':id')
-  @UseGuards(JwtAdminGuard)
-  async delete(@Param('id') id: string): Promise<{ message: string }> {
-    await this.educationService.delete(id);
-    return { message: 'Education deleted successfully' };
-  }
-
   @Delete('all')
   @UseGuards(JwtAdminGuard)
   async deleteAll(): Promise<{ message: string }> {
     await this.educationService.deleteAll();
     return { message: 'All education records deleted successfully' };
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAdminGuard)
+  async delete(@Param('id') id: string): Promise<{ message: string }> {
+    await this.educationService.delete(id);
+    return { message: 'Education deleted successfully' };
   }
 }

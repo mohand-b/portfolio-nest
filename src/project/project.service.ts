@@ -258,6 +258,10 @@ export class ProjectService {
   }
 
   async deleteAll(): Promise<void> {
-    await this.projectRepository.clear();
+    await this.projectRepository
+      .createQueryBuilder()
+      .delete()
+      .from(ProjectEntity)
+      .execute();
   }
 }

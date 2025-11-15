@@ -72,16 +72,16 @@ export class ProjectController {
   }
 
   @UseGuards(JwtAdminGuard)
-  @Delete(':id')
-  async delete(@Param('id') id: string): Promise<{ message: string }> {
-    await this.projectService.delete(id);
-    return { message: 'Le projet a été supprimé.' };
-  }
-
-  @UseGuards(JwtAdminGuard)
   @Delete('all')
   async deleteAll(): Promise<{ message: string }> {
     await this.projectService.deleteAll();
     return { message: 'Tous les projets ont été supprimés.' };
+  }
+
+  @UseGuards(JwtAdminGuard)
+  @Delete(':id')
+  async delete(@Param('id') id: string): Promise<{ message: string }> {
+    await this.projectService.delete(id);
+    return { message: 'Le projet a été supprimé.' };
   }
 }
