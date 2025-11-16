@@ -11,6 +11,7 @@ import { JobModule } from './job/job.module';
 import { ProjectModule } from './project/project.module';
 import { SkillModule } from './skill/skill.module';
 import { TimelineModule } from './timeline/timeline.module';
+import { MilestoneModule } from './milestone/milestone.module';
 import { AchievementModule } from './achievement/achievement.module';
 import { ContactModule } from './contact/contact.module';
 import { QuestionModule } from './question/question.module';
@@ -38,6 +39,7 @@ import { AchievementUnlockLogModule } from './achievement-unlock-log/achievement
     ProjectModule,
     SkillModule,
     TimelineModule,
+    MilestoneModule,
     AchievementModule,
     ContactModule,
     QuestionModule,

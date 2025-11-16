@@ -8,7 +8,7 @@ import { TimelineItemTypeEnum } from '../common/enums/timeline-item-type.enum';
 import { JobEntity } from '../job/job.entity';
 import { SkillEntity } from '../skill/skill.entity';
 import { parseArrayField } from '../utils/array.utils';
-import { buffersToBase64 } from '../utils/image.utils';
+import { bufferToBase64, buffersToBase64 } from '../utils/image.utils';
 import { plainToInstance } from 'class-transformer';
 import { ProjectFilterDto } from './dto/project-filter.dto';
 import { ProjectLightResponseDto } from './dto/project-light-response.dto';
@@ -144,6 +144,13 @@ export class ProjectService {
     return {
       ...updated,
       images: buffersToBase64(updated.images),
+      job: updated.job
+        ? {
+            id: updated.job.id,
+            company: updated.job.company,
+            logo: bufferToBase64(updated.job.image),
+          }
+        : null,
     };
   }
 
@@ -172,6 +179,13 @@ export class ProjectService {
     return {
       ...project,
       images: buffersToBase64(project.images),
+      job: project.job
+        ? {
+            id: project.job.id,
+            company: project.job.company,
+            logo: bufferToBase64(project.job.image),
+          }
+        : null,
     };
   }
 
@@ -279,6 +293,13 @@ export class ProjectService {
     return {
       ...updated,
       images: buffersToBase64(updated.images),
+      job: updated.job
+        ? {
+            id: updated.job.id,
+            company: updated.job.company,
+            logo: bufferToBase64(updated.job.image),
+          }
+        : null,
     };
   }
 

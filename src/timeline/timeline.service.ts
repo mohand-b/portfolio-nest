@@ -4,6 +4,7 @@ import { In, Repository } from 'typeorm';
 import { JobEntity } from '../job/job.entity';
 import { ProjectEntity } from '../project/project.entity';
 import { EducationEntity } from '../education/education.entity';
+import { MilestoneEntity } from '../milestone/milestone.entity';
 import { TimelineFilterDto } from './dto/timeline-filter.dto';
 import { TimelineItemTypeEnum } from '../common/enums/timeline-item-type.enum';
 import { plainToInstance } from 'class-transformer';
@@ -30,6 +31,8 @@ export class TimelineService {
     private readonly projectRepository: Repository<ProjectEntity>,
     @InjectRepository(EducationEntity)
     private readonly educationRepository: Repository<EducationEntity>,
+    @InjectRepository(MilestoneEntity)
+    private readonly milestoneRepository: Repository<MilestoneEntity>,
   ) {}
 
   async findAllTimeline(
@@ -39,7 +42,7 @@ export class TimelineService {
       TimelineItemTypeEnum.JOB,
       TimelineItemTypeEnum.PROJECT,
       TimelineItemTypeEnum.EDUCATION,
-      TimelineItemTypeEnum.OTHER,
+      TimelineItemTypeEnum.MILESTONE,
     ];
 
     const items: TimelineItemDto[] = [];
@@ -97,6 +100,18 @@ export class TimelineService {
           return dto;
         });
       items.push(...educationDtos);
+    }
+
+    if (requestedTypes.includes(TimelineItemTypeEnum.MILESTONE)) {
+      const milestones = await this.milestoneRepository.find();
+      const milestoneDtos = milestones
+        .filter((milestone) => milestone.startDate)
+        .map((milestone) =>
+          plainToInstance(BaseTimelineItemDto, milestone, {
+            excludeExtraneousValues: true,
+          }),
+        );
+      items.push(...milestoneDtos);
     }
 
     items.sort((a, b) => {

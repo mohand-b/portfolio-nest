@@ -6,6 +6,7 @@ import { TimelineController } from './timeline.controller';
 import { JobEntity } from '../job/job.entity';
 import { ProjectEntity } from '../project/project.entity';
 import { EducationEntity } from '../education/education.entity';
+import { MilestoneEntity } from '../milestone/milestone.entity';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { EducationEntity } from '../education/education.entity';
       JobEntity,
       ProjectEntity,
       EducationEntity,
+      MilestoneEntity,
     ]),
   ],
   controllers: [TimelineController],
