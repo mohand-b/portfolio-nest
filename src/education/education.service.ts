@@ -9,6 +9,7 @@ import { toValidDate } from '../utils/date.utils';
 import { CertificationEntity } from '../certification/certification.entity';
 import { parseJsonField } from '../utils/array.utils';
 import { CertificationInputDto } from './dto/certification-input.dto';
+import { bufferToBase64 } from '../utils/image.utils';
 
 @Injectable()
 export class EducationService {
@@ -19,7 +20,7 @@ export class EducationService {
     private readonly certificationRepository: Repository<CertificationEntity>,
   ) {}
 
-  async create(dto: CreateEducationDto): Promise<EducationEntity> {
+  async create(dto: CreateEducationDto): Promise<any> {
     const education = this.educationRepository.create({
       title: dto.title,
       institution: dto.institution,
@@ -32,22 +33,27 @@ export class EducationService {
       endDate: toValidDate(dto.endDate),
     });
 
-    const certifications =
-      parseJsonField<CertificationInputDto>(dto.certifications);
+    const certifications = parseJsonField<CertificationInputDto>(
+      dto.certifications,
+    );
     if (certifications.length > 0) {
       education.certifications = certifications.map((certDto) =>
         this.certificationRepository.create({
           title: certDto.title,
           certificationType: certDto.certificationType,
-          education,
         }),
       );
     }
 
-    return this.educationRepository.save(education);
+    const saved = await this.educationRepository.save(education);
+
+    return {
+      ...saved,
+      image: bufferToBase64(saved.image),
+    };
   }
 
-  async update(id: string, dto: UpdateEducationDto): Promise<EducationEntity> {
+  async update(id: string, dto: UpdateEducationDto): Promise<any> {
     const education = await this.educationRepository.findOne({
       where: { id },
       relations: ['certifications'],
@@ -73,28 +79,38 @@ export class EducationService {
         await this.certificationRepository.remove(education.certifications);
       }
 
-      const certifications =
-        parseJsonField<CertificationInputDto>(dto.certifications);
+      const certifications = parseJsonField<CertificationInputDto>(
+        dto.certifications,
+      );
       education.certifications = certifications.map((certDto) =>
         this.certificationRepository.create({
           title: certDto.title,
           certificationType: certDto.certificationType,
-          education,
         }),
       );
     }
 
-    return this.educationRepository.save(education);
+    const saved = await this.educationRepository.save(education);
+
+    return {
+      ...saved,
+      image: bufferToBase64(saved.image),
+    };
   }
 
-  async findAll(): Promise<EducationEntity[]> {
-    return this.educationRepository.find({
+  async findAll(): Promise<any[]> {
+    const educations = await this.educationRepository.find({
       relations: ['certifications'],
       order: { startDate: 'DESC' },
     });
+
+    return educations.map((education) => ({
+      ...education,
+      image: bufferToBase64(education.image),
+    }));
   }
 
-  async findOne(id: string): Promise<EducationEntity> {
+  async findOne(id: string): Promise<any> {
     const education = await this.educationRepository.findOne({
       where: { id },
       relations: ['certifications'],
@@ -104,7 +120,10 @@ export class EducationService {
       throw new NotFoundException(`Education with ID ${id} not found`);
     }
 
-    return education;
+    return {
+      ...education,
+      image: bufferToBase64(education.image),
+    };
   }
 
   async delete(id: string): Promise<void> {

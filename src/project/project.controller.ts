@@ -72,6 +72,12 @@ export class ProjectController {
   }
 
   @UseGuards(JwtAdminGuard)
+  @Patch(':id/detach')
+  async detachFromTimeline(@Param('id') id: string): Promise<any> {
+    return this.projectService.detachFromTimeline(id);
+  }
+
+  @UseGuards(JwtAdminGuard)
   @Delete('all')
   async deleteAll(): Promise<{ message: string }> {
     await this.projectService.deleteAll();

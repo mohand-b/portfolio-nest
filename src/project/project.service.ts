@@ -256,6 +256,32 @@ export class ProjectService {
     await this.projectRepository.delete({ id });
   }
 
+  async detachFromTimeline(id: string): Promise<any> {
+    const project = await this.projectRepository.findOne({
+      where: { id },
+      relations: ['skills', 'job'],
+    });
+
+    if (!project) {
+      throw new NotFoundException(`Project with ID ${id} not found`);
+    }
+
+    project.startDate = null;
+    project.endDate = null;
+
+    await this.projectRepository.save(project);
+
+    const updated = await this.projectRepository.findOne({
+      where: { id },
+      relations: ['skills', 'job'],
+    });
+
+    return {
+      ...updated,
+      images: buffersToBase64(updated.images),
+    };
+  }
+
   async deleteAll(): Promise<void> {
     await this.projectRepository
       .createQueryBuilder()

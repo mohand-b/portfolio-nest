@@ -9,5 +9,8 @@ export class JobTimelineItemDto extends BaseTimelineItemDto {
   location: string;
 
   @Expose()
+  missions: string[];
+
+  @Expose()
   image?: string;
 }

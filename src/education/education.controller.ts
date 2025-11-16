@@ -28,7 +28,7 @@ export class EducationController {
   async create(
     @Body() dto: CreateEducationDto,
     @UploadedFile() file?: Express.Multer.File,
-  ): Promise<EducationEntity> {
+  ): Promise<any> {
     if (file?.buffer) {
       dto.image = file.buffer;
     }
@@ -42,7 +42,7 @@ export class EducationController {
     @Param('id') id: string,
     @Body() dto: UpdateEducationDto,
     @UploadedFile() file?: Express.Multer.File,
-  ): Promise<EducationEntity> {
+  ): Promise<any> {
     if (file?.buffer) {
       dto.image = file.buffer;
     }
@@ -50,12 +50,12 @@ export class EducationController {
   }
 
   @Get()
-  async findAll(): Promise<EducationEntity[]> {
+  async findAll(): Promise<any[]> {
     return this.educationService.findAll();
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<EducationEntity> {
+  async findOne(@Param('id') id: string): Promise<any> {
     return this.educationService.findOne(id);
   }
 
