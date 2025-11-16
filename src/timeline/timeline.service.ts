@@ -12,6 +12,8 @@ import { ProjectTimelineItemDto } from './dto/project-timeline-item.dto';
 import { EducationTimelineItemDto } from './dto/education-timeline-item.dto';
 import { BaseTimelineItemDto } from './dto/base-timeline-item.dto';
 import { CertificationLightDto } from './dto/certification-light.dto';
+import { SkillLightDto } from './dto/skill-light.dto';
+import { bufferToBase64 } from '../utils/image.utils';
 
 type TimelineItemDto =
   | JobTimelineItemDto
@@ -47,24 +49,35 @@ export class TimelineService {
       const jobs = await this.jobRepository.find();
       const jobDtos = jobs
         .filter((job) => job.startDate) // Only include jobs with startDate
-        .map((job) =>
-          plainToInstance(JobTimelineItemDto, job, {
+        .map((job) => {
+          const dto = plainToInstance(JobTimelineItemDto, job, {
             excludeExtraneousValues: true,
-          }),
-        );
+          });
+          dto.image = bufferToBase64(job.image);
+          return dto;
+        });
       items.push(...jobDtos);
     }
 
     // Fetch projects if requested (only those with startDate)
     if (requestedTypes.includes(TimelineItemTypeEnum.PROJECT)) {
-      const projects = await this.projectRepository.find();
+      const projects = await this.projectRepository.find({
+        relations: ['skills'],
+      });
       const projectDtos = projects
         .filter((project) => project.startDate) // Only include projects with startDate
-        .map((project) =>
-          plainToInstance(ProjectTimelineItemDto, project, {
+        .map((project) => {
+          const dto = plainToInstance(ProjectTimelineItemDto, project, {
             excludeExtraneousValues: true,
-          }),
-        );
+          });
+          // Map skills manually to ensure proper transformation
+          dto.skills = (project.skills || []).map((skill) =>
+            plainToInstance(SkillLightDto, skill, {
+              excludeExtraneousValues: true,
+            }),
+          );
+          return dto;
+        });
       items.push(...projectDtos);
     }
 
@@ -85,6 +98,7 @@ export class TimelineService {
               excludeExtraneousValues: true,
             }),
           );
+          dto.image = bufferToBase64(education.image);
           return dto;
         });
       items.push(...educationDtos);

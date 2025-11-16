@@ -15,4 +15,7 @@ export class EducationTimelineItemDto extends BaseTimelineItemDto {
   @Expose()
   @Type(() => CertificationLightDto)
   certifications: CertificationLightDto[];
+
+  @Expose()
+  image?: string;
 }
