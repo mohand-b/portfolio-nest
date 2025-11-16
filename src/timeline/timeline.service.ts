@@ -44,11 +44,10 @@ export class TimelineService {
 
     const items: TimelineItemDto[] = [];
 
-    // Fetch jobs if requested (only those with startDate)
     if (requestedTypes.includes(TimelineItemTypeEnum.JOB)) {
       const jobs = await this.jobRepository.find();
       const jobDtos = jobs
-        .filter((job) => job.startDate) // Only include jobs with startDate
+        .filter((job) => job.startDate)
         .map((job) => {
           const dto = plainToInstance(JobTimelineItemDto, job, {
             excludeExtraneousValues: true,
@@ -59,18 +58,16 @@ export class TimelineService {
       items.push(...jobDtos);
     }
 
-    // Fetch projects if requested (only those with startDate)
     if (requestedTypes.includes(TimelineItemTypeEnum.PROJECT)) {
       const projects = await this.projectRepository.find({
         relations: ['skills'],
       });
       const projectDtos = projects
-        .filter((project) => project.startDate) // Only include projects with startDate
+        .filter((project) => project.startDate)
         .map((project) => {
           const dto = plainToInstance(ProjectTimelineItemDto, project, {
             excludeExtraneousValues: true,
           });
-          // Map skills manually to ensure proper transformation
           dto.skills = (project.skills || []).map((skill) =>
             plainToInstance(SkillLightDto, skill, {
               excludeExtraneousValues: true,
@@ -81,18 +78,16 @@ export class TimelineService {
       items.push(...projectDtos);
     }
 
-    // Fetch education if requested (only those with startDate)
     if (requestedTypes.includes(TimelineItemTypeEnum.EDUCATION)) {
       const educations = await this.educationRepository.find({
         relations: ['certifications'],
       });
       const educationDtos = educations
-        .filter((education) => education.startDate) // Only include education with startDate
+        .filter((education) => education.startDate)
         .map((education) => {
           const dto = plainToInstance(EducationTimelineItemDto, education, {
             excludeExtraneousValues: true,
           });
-          // Map certifications manually to ensure proper transformation
           dto.certifications = (education.certifications || []).map((cert) =>
             plainToInstance(CertificationLightDto, cert, {
               excludeExtraneousValues: true,
@@ -104,7 +99,6 @@ export class TimelineService {
       items.push(...educationDtos);
     }
 
-    // Sort by endDate descending (most recent first)
     items.sort((a, b) => {
       if (!a.endDate && !b.endDate) return 0;
       if (!a.endDate) return 1;

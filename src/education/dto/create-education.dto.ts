@@ -1,4 +1,12 @@
-import { IsDateString, IsOptional, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsDateString,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+import { CertificationInputDto } from './certification-input.dto';
 
 export class CreateEducationDto {
   @IsString()
@@ -28,4 +36,10 @@ export class CreateEducationDto {
 
   @IsOptional()
   image?: Buffer;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CertificationInputDto)
+  certifications?: CertificationInputDto[];
 }

@@ -125,8 +125,7 @@ export class ProjectService {
       }
     }
 
-    // Handle image updates if files are provided
-    if (files && files.length > 0) {
+    if (files?.length > 0) {
       const newImages = files
         .filter((f) => f.mimetype?.startsWith('image/'))
         .map((f) => f.buffer);

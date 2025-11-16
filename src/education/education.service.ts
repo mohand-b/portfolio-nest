@@ -6,39 +6,83 @@ import { CreateEducationDto } from './dto/create-education.dto';
 import { UpdateEducationDto } from './dto/update-education.dto';
 import { TimelineItemTypeEnum } from '../common/enums/timeline-item-type.enum';
 import { toValidDate } from '../utils/date.utils';
+import { CertificationEntity } from '../certification/certification.entity';
+import { parseJsonField } from '../utils/array.utils';
+import { CertificationInputDto } from './dto/certification-input.dto';
 
 @Injectable()
 export class EducationService {
   constructor(
     @InjectRepository(EducationEntity)
     private readonly educationRepository: Repository<EducationEntity>,
+    @InjectRepository(CertificationEntity)
+    private readonly certificationRepository: Repository<CertificationEntity>,
   ) {}
 
   async create(dto: CreateEducationDto): Promise<EducationEntity> {
     const education = this.educationRepository.create({
-      ...dto,
+      title: dto.title,
+      institution: dto.institution,
+      location: dto.location,
+      fieldOfStudy: dto.fieldOfStudy,
+      description: dto.description,
+      image: dto.image,
       type: TimelineItemTypeEnum.EDUCATION,
       startDate: toValidDate(dto.startDate),
       endDate: toValidDate(dto.endDate),
     });
 
+    const certifications =
+      parseJsonField<CertificationInputDto>(dto.certifications);
+    if (certifications.length > 0) {
+      education.certifications = certifications.map((certDto) =>
+        this.certificationRepository.create({
+          title: certDto.title,
+          certificationType: certDto.certificationType,
+          education,
+        }),
+      );
+    }
+
     return this.educationRepository.save(education);
   }
 
   async update(id: string, dto: UpdateEducationDto): Promise<EducationEntity> {
-    const education = await this.educationRepository.findOneBy({ id });
+    const education = await this.educationRepository.findOne({
+      where: { id },
+      relations: ['certifications'],
+    });
 
     if (!education) {
       throw new NotFoundException(`Education with ID ${id} not found`);
     }
 
-    Object.assign(education, {
-      ...dto,
-      startDate: dto.startDate
-        ? toValidDate(dto.startDate)
-        : education.startDate,
-      endDate: dto.endDate ? toValidDate(dto.endDate) : education.endDate,
-    });
+    if (dto.title !== undefined) education.title = dto.title;
+    if (dto.institution !== undefined) education.institution = dto.institution;
+    if (dto.location !== undefined) education.location = dto.location;
+    if (dto.fieldOfStudy !== undefined)
+      education.fieldOfStudy = dto.fieldOfStudy;
+    if (dto.description !== undefined) education.description = dto.description;
+    if (dto.image !== undefined) education.image = dto.image;
+    if (dto.startDate !== undefined)
+      education.startDate = toValidDate(dto.startDate);
+    if (dto.endDate !== undefined) education.endDate = toValidDate(dto.endDate);
+
+    if (dto.certifications !== undefined) {
+      if (education.certifications?.length > 0) {
+        await this.certificationRepository.remove(education.certifications);
+      }
+
+      const certifications =
+        parseJsonField<CertificationInputDto>(dto.certifications);
+      education.certifications = certifications.map((certDto) =>
+        this.certificationRepository.create({
+          title: certDto.title,
+          certificationType: certDto.certificationType,
+          education,
+        }),
+      );
+    }
 
     return this.educationRepository.save(education);
   }
