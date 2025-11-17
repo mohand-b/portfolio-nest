@@ -102,7 +102,19 @@ export class ProjectService {
       project.endDate = dto.endDate ? new Date(dto.endDate) : null;
     }
 
-    if (dto.jobId !== undefined) {
+    if (dto.isLinkedToJob !== undefined) {
+      const isLinked =
+        dto.isLinkedToJob === true || dto.isLinkedToJob === 'true';
+      if (!isLinked) {
+        project.job = null;
+      } else if (dto.jobId) {
+        const job = await this.jobRepository.findOneBy({ id: dto.jobId });
+        if (!job) {
+          throw new NotFoundException(`Job with ID ${dto.jobId} not found`);
+        }
+        project.job = job;
+      }
+    } else if (dto.jobId !== undefined) {
       if (dto.jobId === null || dto.jobId === '') {
         project.job = null;
       } else {

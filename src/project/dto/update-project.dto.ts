@@ -1,4 +1,5 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsOptional, IsString } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class UpdateProjectDto {
   @IsString()
@@ -41,6 +42,9 @@ export class UpdateProjectDto {
   @IsString()
   @IsOptional()
   impact?: string;
+
+  @IsOptional()
+  isLinkedToJob?: boolean | string;
 
   @IsString()
   @IsOptional()

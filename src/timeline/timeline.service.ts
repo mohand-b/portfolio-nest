@@ -106,11 +106,13 @@ export class TimelineService {
       const milestones = await this.milestoneRepository.find();
       const milestoneDtos = milestones
         .filter((milestone) => milestone.startDate)
-        .map((milestone) =>
-          plainToInstance(BaseTimelineItemDto, milestone, {
+        .map((milestone) => {
+          const dto = plainToInstance(BaseTimelineItemDto, milestone, {
             excludeExtraneousValues: true,
-          }),
-        );
+          });
+          dto.image = bufferToBase64(milestone.image);
+          return dto;
+        });
       items.push(...milestoneDtos);
     }
 
