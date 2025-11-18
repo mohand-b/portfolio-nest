@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException, } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MoreThanOrEqual, Repository } from 'typeorm';
 import { VisitorEntity } from './visitor.entity';
@@ -20,6 +16,8 @@ import { AvatarService } from './avatar.service';
 import { VisitorResponseDto } from './dto/visitor-response.dto';
 import { PaginatedVisitorsResponseDto } from './dto/paginated-visitors-response.dto';
 import { VisitorStatsDto } from './dto/visitor-stats.dto';
+import { AchievementSyncService } from './achievement-sync.service';
+import { VisitorAuthResponse } from './dto/visitor-auth-response.dto';
 
 @Injectable()
 export class VisitorService {
@@ -33,9 +31,10 @@ export class VisitorService {
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
     private readonly avatarService: AvatarService,
+    private readonly achievementSyncService: AchievementSyncService,
   ) {}
 
-  async authenticate(dto: VisitorDto): Promise<any> {
+  async authenticate(dto: VisitorDto): Promise<VisitorAuthResponse> {
     const visitor = await this.findByEmail(dto.email);
 
     if (!visitor) {
@@ -78,7 +77,7 @@ export class VisitorService {
 
   async refreshVisitorToken(
     refreshToken: string,
-  ): Promise<{ accessToken: string }> {
+  ): Promise<VisitorAuthResponse> {
     try {
       const payload = await this.jwtService.verifyAsync(refreshToken, {
         secret: this.config.get<string>('JWT_REFRESH_SECRET'),
@@ -86,19 +85,14 @@ export class VisitorService {
 
       if (payload.type !== UserType.VISITOR) throw new UnauthorizedException();
 
-      const accessToken = await this.jwtService.signAsync(
-        {
-          sub: payload.sub,
-          email: payload.email,
-          type: UserType.VISITOR,
-        },
-        {
-          expiresIn: '15m',
-          secret: this.config.get<string>('JWT_SECRET'),
-        },
-      );
+      const visitor = await this.visitorRepository.findOne({
+        where: { id: payload.sub },
+        relations: ['achievements'],
+      });
 
-      return { accessToken };
+      if (!visitor) throw new UnauthorizedException();
+
+      return this.buildAuthResponse(visitor);
     } catch {
       throw new UnauthorizedException('Refresh token invalide ou expiré');
     }
@@ -150,6 +144,7 @@ export class VisitorService {
         visitor,
         achievement,
       });
+      this.achievementSyncService.markAchievementUpdated();
     }
 
     return {
@@ -171,38 +166,10 @@ export class VisitorService {
       order: { createdAt: 'DESC' },
     });
 
-    const totalActiveAchievements = await this.achievementRepository.count({
-      where: { isActive: true },
-    });
-
-    const data: VisitorResponseDto[] = visitors.map((visitor) => {
-      const unlockedActiveAchievements = visitor.achievements.filter(
-        (a) => a.isActive,
-      ).length;
-
-      const percentCompletion =
-        totalActiveAchievements > 0
-          ? Math.round(
-              (unlockedActiveAchievements / totalActiveAchievements) * 100,
-            )
-          : 0;
-
-      return {
-        id: visitor.id,
-        firstName: visitor.firstName,
-        lastName: visitor.lastName,
-        email: visitor.email,
-        isVerified: visitor.isVerified,
-        createdAt: visitor.createdAt,
-        lastVisitAt: visitor.lastVisitAt,
-        avatarSvg: visitor.avatarSvg,
-        achievements: {
-          unlocked: unlockedActiveAchievements,
-          total: totalActiveAchievements,
-          percentCompletion,
-        },
-      };
-    });
+    const totalActiveAchievements = await this.getTotalActiveAchievements();
+    const data: VisitorResponseDto[] = visitors.map((visitor) =>
+      this.mapVisitorToResponseDto(visitor, totalActiveAchievements),
+    );
 
     return {
       data,
@@ -235,19 +202,14 @@ export class VisitorService {
       relations: ['achievements'],
     });
 
-    const totalActiveAchievements = await this.achievementRepository.count({
-      where: { isActive: true },
-    });
+    const totalActiveAchievements = await this.getTotalActiveAchievements();
 
     const engagedVisitors = allVisitors.filter((visitor) => {
-      const unlockedActiveAchievements = visitor.achievements.filter(
-        (a) => a.isActive,
-      ).length;
-      const percentCompletion =
-        totalActiveAchievements > 0
-          ? (unlockedActiveAchievements / totalActiveAchievements) * 100
-          : 0;
-      return percentCompletion >= 40;
+      const stats = this.calculateAchievementStats(
+        visitor,
+        totalActiveAchievements,
+      );
+      return stats.percentCompletion >= 40;
     }).length;
 
     return {
@@ -266,8 +228,25 @@ export class VisitorService {
     await this.visitorRepository.delete(id);
   }
 
+  async getMe(visitorId: string): Promise<VisitorResponseDto> {
+    const visitor = await this.visitorRepository.findOne({
+      where: { id: visitorId },
+      relations: ['achievements'],
+    });
+
+    if (!visitor) {
+      throw new NotFoundException('Visiteur non trouvé');
+    }
+
+    const totalActiveAchievements = await this.getTotalActiveAchievements();
+    return this.mapVisitorToResponseDto(visitor, totalActiveAchievements);
+  }
+
   private async findByEmail(email: string): Promise<VisitorEntity | null> {
-    return this.visitorRepository.findOne({ where: { email } });
+    return this.visitorRepository.findOne({
+      where: { email },
+      relations: ['achievements'],
+    });
   }
 
   private checkNameMatch(visitor: VisitorEntity, dto: VisitorDto): boolean {
@@ -286,11 +265,11 @@ export class VisitorService {
       verificationToken: randomUUID(),
       verificationExpiresAt: addDays(new Date(), 7),
       lastVisitAt: new Date(),
+      achievements: [],
     });
     await this.visitorRepository.save(visitor);
 
-    const svg = this.avatarService.generate(visitor.id);
-    visitor.avatarSvg = svg;
+    visitor.avatarSvg = this.avatarService.generate(visitor.id);
     return this.visitorRepository.save(visitor);
   }
 
@@ -333,6 +312,19 @@ export class VisitorService {
     const accessToken = await this.issueJwt(visitor);
     const refreshToken = await this.issueRefreshJwt(visitor);
 
+    const visitorWithAchievements = visitor.achievements
+      ? visitor
+      : await this.visitorRepository.findOne({
+          where: { id: visitor.id },
+          relations: ['achievements'],
+        });
+
+    const totalActiveAchievements = await this.getTotalActiveAchievements();
+    const visitorData = this.mapVisitorToResponseDto(
+      visitorWithAchievements,
+      totalActiveAchievements,
+    );
+
     let message: string;
     if (!visitor.isVerified && visitor.verificationExpiresAt) {
       const msLeft = visitor.verificationExpiresAt.getTime() - Date.now();
@@ -341,16 +333,64 @@ export class VisitorService {
     }
 
     return {
-      id: visitor.id,
-      email: visitor.email,
-      firstName: visitor.firstName,
-      lastName: visitor.lastName,
+      ...visitorData,
       accessToken,
       refreshToken,
+      ...(message ? { message } : {}),
+    };
+  }
+
+  private async getTotalActiveAchievements(): Promise<number> {
+    return this.achievementRepository.count({
+      where: { isActive: true },
+    });
+  }
+
+  private calculateAchievementStats(
+    visitor: VisitorEntity,
+    totalActiveAchievements: number,
+  ): {
+    unlocked: number;
+    total: number;
+    percentCompletion: number;
+  } {
+    const unlockedActiveAchievements = visitor.achievements.filter(
+      (a) => a.isActive,
+    ).length;
+
+    const percentCompletion =
+      totalActiveAchievements > 0
+        ? Math.round(
+            (unlockedActiveAchievements / totalActiveAchievements) * 100,
+          )
+        : 0;
+
+    return {
+      unlocked: unlockedActiveAchievements,
+      total: totalActiveAchievements,
+      percentCompletion,
+    };
+  }
+
+  private mapVisitorToResponseDto(
+    visitor: VisitorEntity,
+    totalActiveAchievements: number,
+  ): VisitorResponseDto {
+    const achievementStats = this.calculateAchievementStats(
+      visitor,
+      totalActiveAchievements,
+    );
+
+    return {
+      id: visitor.id,
+      firstName: visitor.firstName,
+      lastName: visitor.lastName,
+      email: visitor.email,
       isVerified: visitor.isVerified,
+      createdAt: visitor.createdAt,
       lastVisitAt: visitor.lastVisitAt,
       avatarSvg: visitor.avatarSvg,
-      ...(message ? { message } : {}),
+      achievements: achievementStats,
     };
   }
 }

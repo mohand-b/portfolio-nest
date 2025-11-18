@@ -1,8 +1,7 @@
-export interface VisitorAuthResponse {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  isVerified: boolean;
+import { VisitorResponseDto } from './visitor-response.dto';
+
+export interface VisitorAuthResponse extends VisitorResponseDto {
+  accessToken: string;
+  refreshToken: string;
   message?: string;
 }

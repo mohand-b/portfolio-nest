@@ -19,4 +19,7 @@ export class BaseTimelineItemDto {
 
   @Expose()
   description?: string;
+
+  @Expose()
+  image?: string;
 }

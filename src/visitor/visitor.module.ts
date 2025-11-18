@@ -9,6 +9,8 @@ import { AchievementEntity } from '../achievement/achievement.entity';
 import { AchievementUnlockLogEntity } from '../achievement-unlock-log/achievement-unlock-log.entity';
 import { AvatarService } from './avatar.service';
 import { VisitorActivityInterceptor } from './visitor-activity.interceptor';
+import { AchievementSyncService } from './achievement-sync.service';
+import { AchievementSyncInterceptor } from '../common/interceptors/achievement-sync.interceptor';
 
 @Module({
   imports: [
@@ -23,9 +25,14 @@ import { VisitorActivityInterceptor } from './visitor-activity.interceptor';
   providers: [
     VisitorService,
     AvatarService,
+    AchievementSyncService,
     {
       provide: APP_INTERCEPTOR,
       useClass: VisitorActivityInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: AchievementSyncInterceptor,
     },
   ],
   exports: [VisitorService],

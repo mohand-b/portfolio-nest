@@ -21,6 +21,7 @@ import { VisitorAuthResponse } from './dto/visitor-auth-response.dto';
 import { JwtAdminGuard } from '../core/guards/jwt-admin.guard';
 import { PaginatedVisitorsResponseDto } from './dto/paginated-visitors-response.dto';
 import { VisitorStatsDto } from './dto/visitor-stats.dto';
+import { VisitorResponseDto } from './dto/visitor-response.dto';
 
 @Controller('visitor')
 export class VisitorController {
@@ -57,12 +58,11 @@ export class VisitorController {
   async refreshToken(
     @Req() req: any,
     @Res({ passthrough: true }) res: Response,
-  ): Promise<{ message: string }> {
+  ): Promise<VisitorAuthResponse> {
     const token = req.cookies['visitorRefreshToken'];
-    const { accessToken } =
-      await this.visitorService.refreshVisitorToken(token);
+    const response = await this.visitorService.refreshVisitorToken(token);
 
-    res.cookie('visitorAccessToken', accessToken, {
+    res.cookie('visitorAccessToken', response.accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -70,7 +70,15 @@ export class VisitorController {
       maxAge: 15 * 60 * 1000,
     });
 
-    return { message: 'Token rafraîchi' };
+    res.cookie('visitorRefreshToken', response.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    return response;
   }
 
   @Post('logout')
@@ -85,6 +93,12 @@ export class VisitorController {
     const success = await this.visitorService.verifyEmail(token);
     if (!success) throw new BadRequestException('Token invalide ou expiré.');
     return { message: 'Email vérifié avec succès.' };
+  }
+
+  @UseGuards(JwtVisitorGuard)
+  @Get('me')
+  getMe(@Req() req: any): Promise<VisitorResponseDto> {
+    return this.visitorService.getMe(req.user.id);
   }
 
   @UseGuards(JwtVisitorGuard)
