@@ -16,12 +16,13 @@ import { VisitorDto } from './dto/visitor.dto';
 import { JwtVisitorGuard } from '../core/guards/jwt-visitor.guard';
 import { AchievementWithStatusDto } from '../achievement/dto/achievement-with-status.dto';
 import { AchievementUnlockResponseDto } from '../achievement/dto/achievement-unlock-response.dto';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { VisitorAuthResponse } from './dto/visitor-auth-response.dto';
 import { JwtAdminGuard } from '../core/guards/jwt-admin.guard';
 import { PaginatedVisitorsResponseDto } from './dto/paginated-visitors-response.dto';
 import { VisitorStatsDto } from './dto/visitor-stats.dto';
 import { VisitorResponseDto } from './dto/visitor-response.dto';
+import { AuthenticatedRequest } from '../core/types/request.types';
 
 @Controller('visitor')
 export class VisitorController {
@@ -30,10 +31,11 @@ export class VisitorController {
   @Post()
   async authenticate(
     @Body() dto: VisitorDto,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<Omit<VisitorAuthResponse, 'accessToken' | 'refreshToken'>> {
     const { accessToken, refreshToken, ...visitorProfile } =
-      await this.visitorService.authenticate(dto);
+      await this.visitorService.authenticate(dto, req);
 
     res.cookie('visitorAccessToken', accessToken, {
       httpOnly: true,
@@ -56,7 +58,7 @@ export class VisitorController {
 
   @Post('refresh-token')
   async refreshToken(
-    @Req() req: any,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<VisitorAuthResponse> {
     const token = req.cookies['visitorRefreshToken'];
@@ -97,7 +99,7 @@ export class VisitorController {
 
   @UseGuards(JwtVisitorGuard)
   @Get('me')
-  getMe(@Req() req: any): Promise<VisitorResponseDto> {
+  getMe(@Req() req: AuthenticatedRequest): Promise<VisitorResponseDto> {
     return this.visitorService.getMe(req.user.id);
   }
 
@@ -105,7 +107,7 @@ export class VisitorController {
   @Post('achievements/unlock/:code')
   unlock(
     @Param('code') code: string,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ): Promise<AchievementUnlockResponseDto> {
     return this.visitorService.unlockAchievement(req.user.id, code);
   }
@@ -113,7 +115,7 @@ export class VisitorController {
   @UseGuards(JwtVisitorGuard)
   @Get('achievements')
   getAchievementsForVisitor(
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ): Promise<AchievementWithStatusDto[]> {
     return this.visitorService.getAchievementsForVisitor(req.user.id);
   }

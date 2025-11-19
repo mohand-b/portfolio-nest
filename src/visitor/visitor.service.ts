@@ -1,6 +1,11 @@
-import { Injectable, NotFoundException, UnauthorizedException, } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MoreThanOrEqual, Repository } from 'typeorm';
+import { Request } from 'express';
 import { VisitorEntity } from './visitor.entity';
 import { randomUUID } from 'crypto';
 import { addDays } from 'date-fns';
@@ -16,8 +21,8 @@ import { AvatarService } from './avatar.service';
 import { VisitorResponseDto } from './dto/visitor-response.dto';
 import { PaginatedVisitorsResponseDto } from './dto/paginated-visitors-response.dto';
 import { VisitorStatsDto } from './dto/visitor-stats.dto';
-import { AchievementSyncService } from './achievement-sync.service';
 import { VisitorAuthResponse } from './dto/visitor-auth-response.dto';
+import { attachAchievementToRequest } from '../achievement/helpers/achievement-unlock.helper';
 
 @Injectable()
 export class VisitorService {
@@ -31,15 +36,30 @@ export class VisitorService {
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
     private readonly avatarService: AvatarService,
-    private readonly achievementSyncService: AchievementSyncService,
   ) {}
 
-  async authenticate(dto: VisitorDto): Promise<VisitorAuthResponse> {
+  async authenticate(
+    dto: VisitorDto,
+    request?: Request,
+  ): Promise<VisitorAuthResponse> {
     const visitor = await this.findByEmail(dto.email);
 
     if (!visitor) {
       const created = await this.registerVisitor(dto);
       await this.issueVerification(created);
+
+      try {
+        const achievementResult = await this.unlockAchievement(
+          created.id,
+          'NEWV1',
+        );
+        if (request) {
+          attachAchievementToRequest(request, achievementResult);
+        }
+      } catch (error) {}
+
+      await this.checkAndUnlockNightAchievement(created.id, request);
+
       return this.buildAuthResponse(created);
     }
 
@@ -55,6 +75,8 @@ export class VisitorService {
 
     visitor.lastVisitAt = new Date();
     await this.visitorRepository.save(visitor);
+
+    await this.checkAndUnlockNightAchievement(visitor.id, request);
 
     return this.buildAuthResponse(visitor);
   }
@@ -137,6 +159,7 @@ export class VisitorService {
     const alreadyUnlocked = visitor.achievements.find(
       (a) => a.id === achievement.id,
     );
+
     if (!alreadyUnlocked) {
       visitor.achievements.push(achievement);
       await this.visitorRepository.save(visitor);
@@ -144,12 +167,18 @@ export class VisitorService {
         visitor,
         achievement,
       });
-      this.achievementSyncService.markAchievementUpdated();
+
+      return {
+        success: true,
+        achievement,
+        alreadyUnlocked: false,
+      };
     }
 
     return {
       success: true,
       achievement,
+      alreadyUnlocked: true,
     };
   }
 
@@ -392,5 +421,21 @@ export class VisitorService {
       avatarSvg: visitor.avatarSvg,
       achievements: achievementStats,
     };
+  }
+
+  private async checkAndUnlockNightAchievement(
+    visitorId: string,
+    request?: Request,
+  ): Promise<void> {
+    if (!request) return;
+
+    try {
+      const currentHour = new Date().getHours();
+      const isNightTime = currentHour >= 12 || currentHour < 6;
+      if (isNightTime) {
+        const nightResult = await this.unlockAchievement(visitorId, 'NIGHT');
+        attachAchievementToRequest(request, nightResult);
+      }
+    } catch (error) {}
   }
 }

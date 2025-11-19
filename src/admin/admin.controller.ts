@@ -9,8 +9,10 @@ import {
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { LoginAdminDto } from './dto/login-admin.dto/login-admin.dto';
-import { Response } from 'express';
+import { CreateAdminDto } from './dto/create-admin.dto';
+import { Response, Request } from 'express';
 import { JwtAdminGuard } from '../core/guards/jwt-admin.guard';
+import { AuthenticatedRequest } from '../core/types/request.types';
 
 @Controller('admin')
 export class AdminController {
@@ -44,7 +46,7 @@ export class AdminController {
 
   @Post('refresh-token')
   async refreshToken(
-    @Req() req: any,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
     const refreshToken = req.cookies['adminRefreshToken'];
@@ -71,12 +73,12 @@ export class AdminController {
 
   @UseGuards(JwtAdminGuard)
   @Get('me')
-  async getAdminProfile(@Req() req: any) {
+  async getAdminProfile(@Req() req: AuthenticatedRequest) {
     return req.user;
   }
 
   @Post('create')
-  async createAdmin(@Body() dto: any) {
+  async createAdmin(@Body() dto: CreateAdminDto) {
     return this.adminService.createAdmin(dto);
   }
 }

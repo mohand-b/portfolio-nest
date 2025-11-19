@@ -16,16 +16,25 @@ export class QuestionService {
   constructor(
     @InjectRepository(QuestionEntity)
     private readonly questionRepository: Repository<QuestionEntity>,
+    @InjectRepository(VisitorEntity)
+    private readonly visitorRepository: Repository<VisitorEntity>,
   ) {}
 
   async create(
     dto: CreateQuestionDto,
-    visitor?: VisitorEntity,
+    visitorId?: string,
   ): Promise<QuestionResponseDto> {
+    let visitor: VisitorEntity | null = null;
+    if (visitorId && !dto.isAnonymous) {
+      visitor = await this.visitorRepository.findOne({
+        where: { id: visitorId },
+      });
+    }
+
     const question = this.questionRepository.create({
       content: dto.content,
       isAnonymous: dto.isAnonymous || false,
-      visitor: dto.isAnonymous ? null : visitor,
+      visitor: visitor,
       status: QuestionStatusEnum.PENDING,
     });
 

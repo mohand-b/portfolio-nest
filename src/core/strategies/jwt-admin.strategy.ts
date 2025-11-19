@@ -4,6 +4,19 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { UserType } from '../../common/enums/role.enum';
 
+interface JwtPayload {
+  sub: string;
+  email: string;
+  iat?: number;
+  exp?: number;
+}
+
+interface AuthenticatedAdmin {
+  id: string;
+  email: string;
+  type: UserType.ADMIN;
+}
+
 @Injectable()
 export class JwtAdminStrategy extends PassportStrategy(Strategy, 'admin-jwt') {
   constructor(config: ConfigService) {
@@ -16,12 +29,11 @@ export class JwtAdminStrategy extends PassportStrategy(Strategy, 'admin-jwt') {
     });
   }
 
-  async validate(payload: any) {
+  async validate(payload: JwtPayload): Promise<AuthenticatedAdmin> {
     return {
       id: payload.sub,
       email: payload.email,
       type: UserType.ADMIN,
-      ...payload,
     };
   }
 }

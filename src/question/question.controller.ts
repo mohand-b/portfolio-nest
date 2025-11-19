@@ -17,6 +17,7 @@ import { QuestionResponseDto } from './dto/question-response.dto';
 import { QuestionPublicResponseDto } from './dto/question-public-response.dto';
 import { JwtVisitorGuard } from '../core/guards/jwt-visitor.guard';
 import { JwtAdminGuard } from '../core/guards/jwt-admin.guard';
+import { AuthenticatedRequest } from '../core/types/request.types';
 
 @Controller('questions')
 export class QuestionController {
@@ -26,9 +27,9 @@ export class QuestionController {
   @UseGuards(JwtVisitorGuard)
   async create(
     @Body() dto: CreateQuestionDto,
-    @Req() req: any,
+    @Req() req: AuthenticatedRequest,
   ): Promise<QuestionResponseDto> {
-    return this.questionService.create(dto, req.user);
+    return this.questionService.create(dto, req.user.id);
   }
 
   @Get('public')

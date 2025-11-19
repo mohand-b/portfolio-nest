@@ -1,7 +1,9 @@
-export function toValidDate(value: any): Date | null {
+export function toValidDate(
+  value: string | number | Date | null | undefined,
+): Date | null {
   if (!value) return null;
 
-  let cleanValue = value;
+  let cleanValue: string | number | Date = value;
   if (typeof value === 'string') {
     cleanValue = value.replace(/^"(.*)"$/, '$1');
   }

@@ -4,6 +4,19 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { UserType } from '../../common/enums/role.enum';
 
+interface JwtPayload {
+  sub: string;
+  email: string;
+  iat?: number;
+  exp?: number;
+}
+
+interface AuthenticatedVisitor {
+  id: string;
+  email: string;
+  type: UserType.VISITOR;
+}
+
 @Injectable()
 export class JwtVisitorStrategy extends PassportStrategy(
   Strategy,
@@ -19,12 +32,11 @@ export class JwtVisitorStrategy extends PassportStrategy(
     });
   }
 
-  async validate(payload: any) {
+  async validate(payload: JwtPayload): Promise<AuthenticatedVisitor> {
     return {
       id: payload.sub,
       email: payload.email,
       type: UserType.VISITOR,
-      ...payload,
     };
   }
 }

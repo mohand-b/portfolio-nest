@@ -1,9 +1,12 @@
-export function parseArrayField(val: any): string[] {
+export function parseArrayField(
+  val: string | string[] | null | undefined,
+): string[] {
   if (!val) return [];
   if (Array.isArray(val)) return val;
   if (typeof val === 'string') {
     try {
-      return JSON.parse(val);
+      const parsed = JSON.parse(val);
+      return Array.isArray(parsed) ? parsed : [];
     } catch {
       return [];
     }
@@ -11,9 +14,9 @@ export function parseArrayField(val: any): string[] {
   return [];
 }
 
-export function parseJsonField<T>(val: any): T[] {
+export function parseJsonField<T>(val: string | T[] | null | undefined): T[] {
   if (!val) return [];
-  if (Array.isArray(val)) return val as T[];
+  if (Array.isArray(val)) return val;
   if (typeof val === 'string') {
     try {
       const parsed = JSON.parse(val);

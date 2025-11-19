@@ -9,6 +9,7 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { LoginAdminDto } from './dto/login-admin.dto/login-admin.dto';
+import { CreateAdminDto } from './dto/create-admin.dto';
 import { AdminEntity } from './admin.entity';
 import { UserType } from '../common/enums/role.enum';
 
@@ -79,7 +80,7 @@ export class AdminService {
     }
   }
 
-  async createAdmin(dto: any) {
+  async createAdmin(dto: CreateAdminDto) {
     const exists = await this.adminRepository.findOne({
       where: { email: dto.email },
     });
