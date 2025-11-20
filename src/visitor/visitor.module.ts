@@ -5,6 +5,7 @@ import { VisitorController } from './visitor.controller';
 import { VisitorService } from './visitor.service';
 import { VisitorEntity } from './visitor.entity';
 import { CoreModule } from '../core/core.module';
+import { AchievementModule } from '../achievement/achievement.module';
 import { AchievementEntity } from '../achievement/achievement.entity';
 import { AchievementUnlockLogEntity } from '../achievement-unlock-log/achievement-unlock-log.entity';
 import { AvatarService } from './avatar.service';
@@ -18,6 +19,7 @@ import { VisitorActivityInterceptor } from './interceptors/visitor-activity.inte
       AchievementUnlockLogEntity,
     ]),
     CoreModule,
+    AchievementModule,
   ],
   controllers: [VisitorController],
   providers: [

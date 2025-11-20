@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
+import { Request } from 'express';
 import { JobEntity } from '../job/job.entity';
 import { ProjectEntity } from '../project/project.entity';
 import { EducationEntity } from '../education/education.entity';
 import { MilestoneEntity } from '../milestone/milestone.entity';
 import { TimelineFilterDto } from './dto/timeline-filter.dto';
 import { TimelineItemTypeEnum } from '../common/enums/timeline-item-type.enum';
+import { UserType } from '../common/enums/role.enum';
 import { plainToInstance } from 'class-transformer';
 import { JobTimelineItemDto } from './dto/job-timeline-item.dto';
 import { ProjectTimelineItemDto } from './dto/project-timeline-item.dto';
@@ -14,7 +16,9 @@ import { EducationTimelineItemDto } from './dto/education-timeline-item.dto';
 import { BaseTimelineItemDto } from './dto/base-timeline-item.dto';
 import { CertificationLightDto } from './dto/certification-light.dto';
 import { SkillLightDto } from './dto/skill-light.dto';
+import { TimelineResponseDto } from './dto/timeline-response.dto';
 import { bufferToBase64 } from '../utils/image.utils';
+import { AchievementAutoUnlockService } from '../achievement/services/achievement-auto-unlock.service';
 
 type TimelineItemDto =
   | JobTimelineItemDto
@@ -33,11 +37,13 @@ export class TimelineService {
     private readonly educationRepository: Repository<EducationEntity>,
     @InjectRepository(MilestoneEntity)
     private readonly milestoneRepository: Repository<MilestoneEntity>,
+    private readonly achievementAutoUnlockService: AchievementAutoUnlockService,
   ) {}
 
   async findAllTimeline(
     filters: TimelineFilterDto,
-  ): Promise<TimelineItemDto[]> {
+    request?: Request,
+  ): Promise<TimelineResponseDto> {
     const requestedTypes = filters.types || [
       TimelineItemTypeEnum.JOB,
       TimelineItemTypeEnum.PROJECT,
@@ -123,6 +129,14 @@ export class TimelineService {
       return new Date(b.endDate).getTime() - new Date(a.endDate).getTime();
     });
 
-    return items;
+    if (request?.user && request.user.type === UserType.VISITOR) {
+      await this.achievementAutoUnlockService.checkAndUnlock(
+        request.user.id,
+        'VYTMP',
+        request,
+      );
+    }
+
+    return { data: items };
   }
 }

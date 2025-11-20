@@ -5,13 +5,7 @@ export function attachAchievementToRequest(
   request: Request,
   achievementResult: AchievementUnlockResponseDto | null,
 ): void {
-  if (
-    !achievementResult ||
-    !achievementResult.success ||
-    achievementResult.alreadyUnlocked
-  ) {
-    return;
-  }
+  if (!achievementResult?.success || achievementResult.alreadyUnlocked) return;
 
   if (!request.newlyUnlockedAchievements) {
     request.newlyUnlockedAchievements = [];

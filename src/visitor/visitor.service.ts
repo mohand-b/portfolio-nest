@@ -16,6 +16,7 @@ import { AchievementEntity } from '../achievement/achievement.entity';
 import { AchievementWithStatusDto } from '../achievement/dto/achievement-with-status.dto';
 import { AchievementUnlockResponseDto } from '../achievement/dto/achievement-unlock-response.dto';
 import { AchievementUnlockLogEntity } from '../achievement-unlock-log/achievement-unlock-log.entity';
+import { AchievementAutoUnlockService } from '../achievement/services/achievement-auto-unlock.service';
 import { ConfigService } from '@nestjs/config';
 import { AvatarService } from './avatar.service';
 import { VisitorResponseDto } from './dto/visitor-response.dto';
@@ -33,6 +34,7 @@ export class VisitorService {
     private readonly achievementRepository: Repository<AchievementEntity>,
     @InjectRepository(AchievementUnlockLogEntity)
     private readonly achievementUnlockLogRepository: Repository<AchievementUnlockLogEntity>,
+    private readonly achievementAutoUnlockService: AchievementAutoUnlockService,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
     private readonly avatarService: AvatarService,
@@ -58,7 +60,10 @@ export class VisitorService {
         }
       } catch (error) {}
 
-      await this.checkAndUnlockNightAchievement(created.id, request);
+      await this.achievementAutoUnlockService.checkAndUnlockNightAchievement(
+        created.id,
+        request,
+      );
 
       return this.buildAuthResponse(created);
     }
@@ -76,7 +81,10 @@ export class VisitorService {
     visitor.lastVisitAt = new Date();
     await this.visitorRepository.save(visitor);
 
-    await this.checkAndUnlockNightAchievement(visitor.id, request);
+    await this.achievementAutoUnlockService.checkAndUnlockNightAchievement(
+      visitor.id,
+      request,
+    );
 
     return this.buildAuthResponse(visitor);
   }
@@ -421,21 +429,5 @@ export class VisitorService {
       avatarSvg: visitor.avatarSvg,
       achievements: achievementStats,
     };
-  }
-
-  private async checkAndUnlockNightAchievement(
-    visitorId: string,
-    request?: Request,
-  ): Promise<void> {
-    if (!request) return;
-
-    try {
-      const currentHour = new Date().getHours();
-      const isNightTime = currentHour >= 12 || currentHour < 6;
-      if (isNightTime) {
-        const nightResult = await this.unlockAchievement(visitorId, 'NIGHT');
-        attachAchievementToRequest(request, nightResult);
-      }
-    } catch (error) {}
   }
 }

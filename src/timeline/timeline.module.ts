@@ -7,6 +7,8 @@ import { JobEntity } from '../job/job.entity';
 import { ProjectEntity } from '../project/project.entity';
 import { EducationEntity } from '../education/education.entity';
 import { MilestoneEntity } from '../milestone/milestone.entity';
+import { AchievementModule } from '../achievement/achievement.module';
+import { CoreModule } from '../core/core.module';
 
 @Module({
   imports: [
@@ -17,6 +19,8 @@ import { MilestoneEntity } from '../milestone/milestone.entity';
       EducationEntity,
       MilestoneEntity,
     ]),
+    AchievementModule,
+    CoreModule,
   ],
   controllers: [TimelineController],
   providers: [TimelineService],
